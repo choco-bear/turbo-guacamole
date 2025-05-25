@@ -324,3 +324,6 @@ Makefile.coq.conf
 
 # vscode
 .vscode/*
+
+# opam link
+_opam
