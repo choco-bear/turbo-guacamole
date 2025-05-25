@@ -1,7 +1,7 @@
 # Turbo-Guacamole
 The name of the repository is generated randomly.
 
-This repoitory is for "야수연 오마카세."
+The repository contains formalizations of some type systems.
 
 ## Setup
 This version is known to compile with
