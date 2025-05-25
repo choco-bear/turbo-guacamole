@@ -4,9 +4,6 @@ Makefile.coq: _CoqProject
 all: Makefile.coq
 	$(MAKE) -f Makefile.coq all
 
-build: Makefile.coq
-	$(MAKE) -f Makefile.coq build
-
 install: Makefile.coq
 	$(MAKE) -f Makefile.coq install
 
@@ -16,4 +13,4 @@ clean: Makefile.coq
 cleanall: Makefile.coq
 	$(MAKE) -f Makefile.coq cleanall
 
-.PHONY: all build install clean cleanall Makefile.coq
+.PHONY: all install clean cleanall Makefile.coq
