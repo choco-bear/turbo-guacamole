@@ -1,8 +1,6 @@
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Require Import Coq.Strings.String.
-Require Import stdpp.relations.
-From ExtLib Require Import Structures.Maps Core.RelDec.
-From ExtLib.Data Require Import Map.FMapAList String.
+From stdpp Require Import relations base sets gmap.
 Require Import Intro2TT.Tactics.
 Set Default Goal Selector "!".
 Open Scope string_scope.
@@ -127,19 +125,14 @@ Local Open Scope ty_scope.
 (** Context *)
 (** A context is a mapping from variable names to types. We use an association
   * list to represent this mapping. *)
-Definition ctx := alist string type.
-Local Instance Map_ctx : Map string type ctx.
-  eapply Map_alist. eauto with typeclass_instances.
-Defined.
 
-Definition subctx : relation ctx :=
-  fun Γ Γ' => ∀ k v, (mapsto k v Γ → mapsto k v Γ').
+Definition ctx := gmap string type.
 
 (** The below are just for human readable notation. *)
 Declare Scope ctx_scope.
 Delimit Scope ctx_scope with ctx.
-Notation "∅" := (empty) : ctx_scope.
-Notation "x : τ ; Γ" := (@add string type ctx Map_ctx x τ%ty Γ%ctx)
+Notation "∅" := (∅ : gmap string type) : ctx_scope.
+Notation "x : τ ; Γ" := (<[x:=τ%ty]>Γ%ctx)
   (at level 60, τ at level 99, Γ at level 99, right associativity) : ctx_scope.
 
 Local Open Scope ctx_scope.
@@ -157,12 +150,11 @@ Inductive has_type : ctx → expr → type → Prop :=
       (x : τ1 ; Γ) ⊢ e : τ2 →
       Γ ⊢ (λ: x, e) : (τ1 → τ2)
   | T_Var : forall Γ (x : string) τ,
-      lookup x Γ = Some τ →
+      Γ !! x = Some τ →
       Γ ⊢ x : τ
   | T_Const : forall Γ c T,
       Γ ⊢ const c of type T : (TyBase T)%ty
   where "Γ '⊢' e ':' τ" := (has_type Γ%ctx e%E τ%ty).
-
 Hint Constructors has_type : core.
 
 
@@ -175,59 +167,38 @@ Hint Constructors has_type : core.
 (** These lemmas are used to manipulate contexts, particularly for
   * looking up variables and ensuring that the context behaves as expected. *)
 Lemma ctx_empty x :
-  lookup x ∅ = None.
+  ∅ !! x = None.
 Proof. done. Qed.
 
-Lemma ctx_eq x τ Γ :
-  lookup x (x : τ; Γ) = Some τ.
-Proof with (eauto with typeclass_instances).
-  simpl. rewrite rel_dec_eq_true...
-Qed.
-
-Lemma ctx_neq x y τ Γ :
-  x ≠ y → lookup x (y : τ; Γ) = lookup x Γ.
-Proof with (eauto with typeclass_instances).
-  intro. induction Γ.
-  - simpl. rewrite rel_dec_neq_false...
-  - destruct a as [k v]. bdestruct (y =? k); bdestruct (x =? k); subst.
-    + by exfalso.
-    + simpl in *.
-      rewrite rel_dec_neq_false in *;
-        first rewrite rel_dec_eq_true...
-    + simpl in *. assert (rel_dec k k = true) as ->.
-      { rewrite rel_dec_eq_true... }
-      rewrite !rel_dec_neq_false in *... simpl.
-      rewrite rel_dec_eq_true...
-    + simpl in *. rewrite !rel_dec_neq_false in *... simpl.
-      rewrite !rel_dec_neq_false...
-Qed.
-
-Lemma ctx_shadow x τ τ' Γ :
-  (x : τ; x : τ'; Γ) = x : τ; Γ.
-Proof with (eauto with typeclass_instances).
-  induction Γ.
-  - simpl. unfold alist_add. f_equal. simpl.
-    rewrite rel_dec_eq_true...
-  - destruct a as [k v]. bdestruct (x =? k); subst.
-    + simpl; unfold alist_add, alist_remove; simpl; f_equal.
-      rewrite rel_dec_eq_true... simpl.
-      apply forallb_filter_id, forallb_filter.
-    + simpl; unfold alist_add, alist_remove; simpl; f_equal.
-      rewrite rel_dec_eq_true... simpl.
-      rewrite rel_dec_neq_false... simpl.
-      rewrite rel_dec_neq_false... simpl.
-      f_equal. apply forallb_filter_id, forallb_filter.
-Qed.
-
-Lemma ctx_permute x y τ σ Γ :
-  x ≠ y → subctx (x : τ; y : σ; Γ) (y : σ; x : τ; Γ).
+Lemma ctx_eq x τ (Γ : ctx) :
+  (x : τ; Γ) !! x = Some τ.
 Proof.
-  intros H k v.
-  bdestruct (x =? k); bdestruct (y =? k); subst.
-  - by exfalso.
-  - by rewrite <-!mapsto_lookup, ctx_eq, ctx_neq, ctx_eq.
-  - by rewrite <-!mapsto_lookup, ctx_neq, !ctx_eq.
-  - by rewrite <-!mapsto_lookup, !ctx_neq.
+  apply lookup_insert.
+Qed.
+
+Lemma ctx_eq_inv x τ σ (Γ : ctx) :
+  (x : τ; Γ) !! x = Some σ →
+  τ = σ.
+Proof.
+  rewrite ctx_eq; intro; solve_by_invert.
+Qed.
+
+Lemma ctx_neq x y τ (Γ : ctx) :
+  x ≠ y → (y : τ; Γ) !! x = Γ !! x.
+Proof.
+  by intro; apply lookup_insert_ne.
+Qed.
+
+Lemma ctx_shadow x τ τ' (Γ : ctx) :
+  (x : τ; x : τ'; Γ) = x : τ; Γ.
+Proof.
+  apply insert_insert.
+Qed.
+
+Lemma ctx_permute x y τ σ (Γ : ctx) :
+  x ≠ y → (x : τ; y : σ; Γ) = (y : σ; x : τ; Γ).
+Proof.
+  apply insert_commute.
 Qed.
 
 (** Stuckness *)
@@ -257,24 +228,20 @@ Proof. do 2 inversion 1; eauto. Qed.
 (** Weakening *)
 (** These lemmas are used to weaken the context in which typing judgments hold. *)
 Lemma weakening e τ Γ Γ' :
-  subctx Γ Γ' →
+  Γ ⊆ Γ' →
   Γ ⊢ e : τ →
   Γ' ⊢ e : τ.
 Proof.
   intros ? Hty; generalize dependent Γ'.
   induction Hty; eauto; intros; constructor.
-  - apply IHHty. intros k v Hmapsto.
-    unfold subctx in H. bdestruct (x =? k); subst.
-    + by rewrite <-mapsto_lookup, ctx_eq in *.
-    + rewrite <-mapsto_lookup, ctx_neq in *; eauto.
-      rewrite mapsto_lookup in *. eauto.
-  - rewrite mapsto_lookup in *. eauto.
+  - by apply IHHty, insert_mono.
+  - by eapply lookup_weaken.
 Qed.
 
 Lemma weakening_empty e τ Γ :
   ∅ ⊢ e : τ →
   Γ ⊢ e : τ.
-Proof. by apply weakening. Qed.
+Proof. apply weakening, map_empty_subseteq. Qed.
 
 (** Substitution Lemma *)
 (** This lemma states that substituting a value for a variable in an expression
@@ -287,20 +254,15 @@ Proof.
   revert x v σ τ Γ.
   induction e; inversion 1; subst; intros;
     try solve [simpl; eauto]; bdestruct (s =? x); subst; simpl.
-  - inversion H2. rewrite rel_dec_eq_true in H3;
-      eauto with typeclass_instances.
-    inversion H3; subst; rewrite String.eqb_refl.
+  - apply ctx_eq_inv in H2; subst. rewrite String.eqb_refl.
     by apply weakening_empty.
-  - inversion H2; subst. rewrite rel_dec_neq_false in H4;
-      eauto with typeclass_instances.
-    rewrite (proj2 (eqb_neq _ _)); eauto.
-    constructor. by rewrite ctx_neq in H2.
-  - rewrite String.eqb_refl. constructor.
-    by rewrite ctx_shadow in H4.
+  - rewrite (proj2 (eqb_neq _ _)); eauto.
+    rewrite ctx_neq in H2; eauto.
+  - rewrite String.eqb_refl.
+    rewrite ctx_shadow in H4; eauto.
   - rewrite (proj2 (eqb_neq _ _)); eauto.
     constructor. eapply IHe; eauto.
-    apply weakening with (Γ := (s : τ1; x : σ; Γ));
-      by try apply ctx_permute.
+    eapply weakening; eauto. by rewrite ctx_permute.
 Qed.
 
 
@@ -356,6 +318,79 @@ Proof.
   intros Hty Hrtc. induction Hrtc as [e | e e' e'' Hred Hrtc IH].
   - apply progress in Hty as [Hv|[e' Hred]]; intros []; by eauto.
   - eauto using preservation.
+Qed.
+
+
+
+(** ** Context Invariance *)
+(** This section contains theorems and lemmas related to the invariance of typing
+  * under changes to the context. Context invariance is a crucial property of
+  * typed lambda calculi, as it ensures that the typing judgments remain valid
+  * even when the context is modified, as long as the free variables are
+  * appropriately accounted for. *)
+
+(** Free Variables *)
+(** The free variables of an expression are defined as those variables that
+  * appear in the expression but are not bound by a lambda abstraction. *)
+Fixpoint free_vars (e : expr) : list string :=
+  match e with
+  | Var x => [x]
+  | Lam x e' => List.filter (fun y => negb (x =? y)) (free_vars e')
+  | App e1 e2 => free_vars e1 ++ free_vars e2
+  | Const _ _ => []
+  end.
+Notation "x '∈' 'FV' e" := (In x (free_vars e)) (at level 70, e at level 40).
+Notation "x '∉' 'FV' e" := (¬ In x (free_vars e)) (at level 70, e at level 40).
+
+(** Closed Expressions *)
+(** An expression is closed if it has no free variables, meaning all variables
+  * are bound by lambda abstractions. This is important for ensuring that
+  * expressions can be evaluated without needing to reference external variables. *)
+Definition closed (e : expr) : Prop :=
+  forall x, x ∉ FV e.
+
+(** Lemma for Context Invariance Theorem *)
+(** This lemma states that if a variable is free in an expression and the
+  * expression is well-typed in a context, then there exists a type for that
+  * variable in the context. This is crucial for ensuring that the type system
+  * is consistent and that free variables are properly typed. *)
+Lemma free_in_ctx x e τ Γ :
+  x ∈ FV e →
+  Γ ⊢ e : τ →
+  ∃ τ', Γ !! x = Some τ'.
+Proof.
+  intros. revert H. induction H0; intros; simpl in *; intuition.
+  - apply in_app_or in H as []; auto.
+  - rewrite filter_In in H; intuition.
+    bdestruct (x0 =? x); subst; try solve_by_invert.
+    destruct H as [τ' H]; rewrite ctx_neq in H; eauto.
+  - subst; eauto.
+Qed.
+
+Corollary typable_closed e τ :
+  ∅ ⊢ e : τ →
+  closed e.
+Proof.
+  do 3 intro. rename H into Hty. rename H0 into H.
+  by destruct (free_in_ctx x _ _ _ H Hty).
+Qed.
+
+(** Context Invariance Theorem *)
+(** This theorem states that if an expression is well-typed in one context, it
+  * remains well-typed in another context that has the same variable bindings for
+  * the free variables of the expression. This is crucial for ensuring that the
+  * type system is invariant under changes to the context. *)
+Theorem ctx_invariance e τ Γ Γ' :
+  Γ ⊢ e : τ →
+  (∀ x, x ∈ FV e → Γ !! x = Γ' !! x) →
+  Γ' ⊢ e : τ.
+Proof.
+  intro; revert Γ'; induction H; intros; auto.
+  - eauto 10 using in_or_app.
+  - constructor. apply IHhas_type. intros.
+    bdestruct (x =? x0); subst; rewrite ?ctx_eq, ?ctx_neq; eauto.
+    by apply H0; simpl; rewrite filter_In, (proj2 (eqb_neq _ _)).
+  - rewrite (H0 x) in H; by first [left | constructor].
 Qed.
 
 
