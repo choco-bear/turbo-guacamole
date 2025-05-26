@@ -349,12 +349,12 @@ Notation "x '∉' 'FV' e" := (¬ In x (free_vars e)) (at level 70, e at level 40
 Definition closed (e : expr) : Prop :=
   forall x, x ∉ FV e.
 
-(** Lemma for Context Invariance Theorem *)
-(** This lemma states that if a variable is free in an expression and the
-  * expression is well-typed in a context, then there exists a type for that
-  * variable in the context. This is crucial for ensuring that the type system
-  * is consistent and that free variables are properly typed. *)
-Lemma free_in_ctx x e τ Γ :
+(** Free Variables in Context *)
+(** This theorem states that if a variable [x] is free in an expression [e]
+  * and [e] is well-typed in context [Γ], then there exists a type [τ'] such
+  * that [x] is bound to [τ'] in the context [Γ]. This is crucial for ensuring
+  * that the type system can account for all free variables in expressions. *)
+Theorem free_in_ctx x e τ Γ :
   x ∈ FV e →
   Γ ⊢ e : τ →
   ∃ τ', Γ !! x = Some τ'.
@@ -367,7 +367,7 @@ Proof.
   - subst; eauto.
 Qed.
 
-Corollary typable_closed e τ :
+Corollary has_type_closed e τ :
   ∅ ⊢ e : τ →
   closed e.
 Proof.
@@ -379,7 +379,8 @@ Qed.
 (** This theorem states that if an expression is well-typed in one context, it
   * remains well-typed in another context that has the same variable bindings for
   * the free variables of the expression. This is crucial for ensuring that the
-  * type system is invariant under changes to the context. *)
+  * type system is invariant under changes to the context. Furthermore, this
+  * theorem can be considered as a generalization of the weakening lemma. *)
 Theorem ctx_invariance e τ Γ Γ' :
   Γ ⊢ e : τ →
   (∀ x, x ∈ FV e → Γ !! x = Γ' !! x) →
@@ -391,6 +392,15 @@ Proof.
     bdestruct (x =? x0); subst; rewrite ?ctx_eq, ?ctx_neq; eauto.
     by apply H0; simpl; rewrite filter_In, (proj2 (eqb_neq _ _)).
   - rewrite (H0 x) in H; by first [left | constructor].
+Qed.
+
+Corollary closed_strengthen e τ Γ :
+  closed e →
+  Γ ⊢ e : τ →
+  ∅ ⊢ e : τ.
+Proof.
+  intros Hcl Hty. apply ctx_invariance with Γ; auto.
+  intros x contra. exfalso. by eapply Hcl.
 Qed.
 
 
