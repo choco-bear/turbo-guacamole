@@ -3,9 +3,31 @@ From stdpp Require Import relations.
 Require Import Intro2TT.Tactics.
 Set Default Goal Selector "!".
 
-(** ** Syntax *)
+(** ** Motivation of Types *)
 
-(** _Terms_ are defined inductively as follows: *)
+(** This file is part of the "Introduction to Type Theory."
+  * It provides a simple programming language with booleans and natural numbers,
+  * along with an operational semantics and a type system. The language is
+  * designed to be a minimalistic example for motivating the need for types.
+  *
+  * The main goals of this file are:
+  * - To motivate the need for types in programming languages
+  * - To define the syntax of a simple programming language
+  * - To provide an operational semantics for the language
+  * - To define a type system for the language
+  * - To prove soundness of the type system
+  *)
+
+(** ** Syntax *)
+(** The syntax of the language is defined using inductive types.
+  * The language includes booleans, natural numbers, and conditional expressions.
+  * The syntax is designed to be simple and expressive, allowing for basic
+  * operations on these types. *)
+
+(** Terms *)
+(** Terms are defined inductively. The language includes booleans, natural
+  * numbers, and conditional expressions. The syntax is designed to be simple 
+  * and expressive, allowing for basic operations on these types. *)
 Inductive tm : Type :=
   | tru : tm
   | fls : tm
@@ -15,7 +37,7 @@ Inductive tm : Type :=
   | prd : tm -> tm
   | iszro : tm -> tm.
 
-(** The below are just for the custom notations. *)
+(** The below are just for the human-readable notation. *)
 Declare Custom Entry tm.
 Declare Scope tm_scope.
 Notation "'true'"  := true (at level 1): tm_scope.
@@ -35,7 +57,9 @@ Notation "'if' c 'then' t 'else' e" := (ite c t e)
                   t custom tm at level 80, e custom tm at level 80): tm_scope.
 Local Open Scope tm_scope.
 
-(** _Values_ are [true], [false], and numeric values... *)
+(** Values *)
+(** _Values_ are terms that cannot be reduced further. In this language,
+  * values are either booleans or natural numbers. *)
 Inductive bvalue : tm -> Prop :=
   | bv_true : bvalue <{ true }>
   | bv_false : bvalue <{ false }>.
@@ -52,8 +76,15 @@ Hint Unfold value : core.
 
 
 (** ** Operational Semantics *)
+(** The operational semantics of the language is defined using a reduction 
+  * relation. The reduction relation describes how terms can be reduced to simpler
+  * terms. The semantics is designed to be deterministic, meaning that each term
+  * has a unique normal form if it can be reduced. *)
 
 (** Reduction *)
+(** The reduction relation is defined inductively. It describes how terms can be
+  * reduced to simpler terms. The semantics is designed to be deterministic,
+  * meaning that each term has a unique normal form if it can be reduced. *)
 Reserved Notation "t '↝' t'" (at level 40).
 Inductive reduction : tm -> tm -> Prop :=
   | Red_IfTrue : forall t1 t2,
@@ -96,15 +127,25 @@ Hint Unfold stuck : core.
 
 
 (** ** Typing *)
+(** The typing relation is defined inductively. It describes how terms can be
+  * assigned types. The typing relation is designed to be sound, meaning that if 
+  * a term has a type, it can be reduced to a value of that type. *)
 
-(** _Type_ is either Bool or Nat. *)
+(** Types *)
+(** The language includes two types: booleans and natural numbers. These types
+  * are defined inductively. The typing relation will assign these types to terms
+  * based on their structure and behavior. *)
 Inductive ty : Type :=
   | Bool : ty
   | Nat : ty.
 
+(** Typing Relation *)
+(** The typing relation describes how terms can be assigned types. It is defined
+  * inductively, allowing for the assignment of types to terms based on their
+  * structure and behavior. *)
+
 (** We will use ∈: instead of ∈ because it is reserved by the stdpp package. *)
 Reserved Notation "'⊢' t '∈:' T" (at level 40).
-(** The typing relation is defined inductively as follows: *)
 Inductive has_type : tm -> ty -> Prop :=
   | T_True :
        ⊢ <{ true }> ∈: Bool
@@ -132,6 +173,12 @@ Hint Constructors has_type : core.
 
 
 (** ** Canonical forms *)
+(** Canonical forms are used to prove that certain terms have specific types. They
+  * are essential for the soundness of the type system, ensuring that if a term 
+  * has a type, it can be reduced to a value of that type.
+  *
+  * The following lemmas state that if a term is of a certain type and is a value,
+  * then it must be of a specific form (either a boolean or a natural number). *)
 Lemma bool_canonical : forall t,
   ⊢ t ∈: Bool -> value t -> bvalue t.
 Proof.
@@ -153,6 +200,9 @@ Qed.
 
 
 (** ** Progress *)
+(** The progress theorem states that if a term has a type, it is either a value or
+  * can take a step in the reduction relation. This is crucial for ensuring that 
+  * the language is well-defined and that terms can be evaluated. *)
 Theorem progress : forall t T,
   ⊢ t ∈: T ->
   value t \/ exists t', t ↝ t'.
@@ -170,6 +220,10 @@ Qed.
 
 
 (** ** Preservation *)
+(** The preservation theorem states that if a term has a type and can take a step
+  * in the reduction relation, then the resulting term also has the same type.
+  * This is essential for ensuring that the type system is sound and that types
+  * are preserved during evaluation. *)
 Theorem preservation : forall t t' T,
   ⊢ t ∈: T ->
   t ↝ t' ->
@@ -186,6 +240,12 @@ Qed.
 
 
 (** ** Soundness *)
+(** The soundness theorem states that if a term has a type and can take multiple
+  * steps in the reduction relation, then it will eventually reduce to a value of
+  * that type. This is crucial for ensuring that the type system is sound and that
+  * terms can be evaluated to values. *)
+
+(** We define a reflexive transitive closure (rtc) for the reduction relation. *)
 Notation "t1 '↝*' t2" := (rtc reduction t1 t2) (at level 40).
 
 Corollary soundness : forall t t' T,

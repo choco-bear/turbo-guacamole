@@ -7,6 +7,19 @@ Require Import Intro2TT.Tactics.
 Set Default Goal Selector "!".
 Open Scope string_scope.
 
+(** ** Simply Typed Lambda Calculus *)
+(** This file is part of the "Introduction to Type Theory."
+  * It provides a simply typed lambda calculus with constants, lambda abstractions,
+  * and applications. The language is designed to be a minimalistic example for
+  * demonstrating type systems and operational semantics.
+  *
+  * The main goals of this file are:
+  * - To define the syntax of a simply typed lambda calculus
+  * - To provide an operational semantics for the language
+  * - To define a type system for the language
+  * - To prove soundness of the type system
+  *)
+
 
 
 (** ** Syntax *)
