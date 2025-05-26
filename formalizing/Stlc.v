@@ -9,9 +9,9 @@ Open Scope string_scope.
 
 (** ** Simply Typed Lambda Calculus *)
 (** This file is part of the "Introduction to Type Theory."
-  * It provides a simply typed lambda calculus with constants, lambda abstractions,
-  * and applications. The language is designed to be a minimalistic example for
-  * demonstrating type systems and operational semantics.
+  * It provides a simply typed lambda calculus with constants, lambda 
+  * abstractions, and applications. The language is designed to be a minimalistic 
+  * example for demonstrating type systems and operational semantics.
   *
   * The main goals of this file are:
   * - To define the syntax of a simply typed lambda calculus
@@ -125,8 +125,8 @@ Notation "A → B" := (TyArrow A%ty B%ty) : ty_scope.
 Local Open Scope ty_scope.
 
 (** Context *)
-(** A context is a mapping from variable names to types. We use an association list
-  * to represent this mapping. *)
+(** A context is a mapping from variable names to types. We use an association
+  * list to represent this mapping. *)
 Definition ctx := alist string type.
 Local Instance Map_ctx : Map string type ctx.
   eapply Map_alist. eauto with typeclass_instances.
@@ -394,10 +394,10 @@ Qed.
 
 (** Identity Function *)
 (** This proposition states that the identity function [λ: "x", "x"] is well-typed
-  * for any type of the form [τ → τ]. This is a fundamental property of the identity
-  * function in typed lambda calculus. Moreover, it illustrates the principle of
-  * polymorphism, where a function can be applied to arguments of different types
-  * while maintaining its type correctness. *)
+  * for any type of the form [τ → τ]. This is a fundamental property of the
+  * identity function in typed lambda calculus. Moreover, it illustrates the
+  * principle of polymorphism, where a function can be applied to arguments of
+  * different types while maintaining its type correctness. *)
 Proposition id_well_typed τ :
   ∅ ⊢ (λ: "x", "x") : (τ → τ).
 Proof. by apply T_Lam, T_Var. Qed.

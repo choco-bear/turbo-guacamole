@@ -19,10 +19,10 @@ Set Default Goal Selector "!".
   *)
 
 (** ** Syntax *)
-(** The syntax of the language is defined using inductive types.
-  * The language includes booleans, natural numbers, and conditional expressions.
-  * The syntax is designed to be simple and expressive, allowing for basic
-  * operations on these types. *)
+(** The syntax of the language is defined using inductive types. The language
+  * includes booleans, natural numbers, and conditional expressions. The syntax
+  * is designed to be simple and expressive, allowing for basic operations on
+  * these types. *)
 
 (** Terms *)
 (** Terms are defined inductively. The language includes booleans, natural
@@ -58,8 +58,8 @@ Notation "'if' c 'then' t 'else' e" := (ite c t e)
 Local Open Scope tm_scope.
 
 (** Values *)
-(** _Values_ are terms that cannot be reduced further. In this language,
-  * values are either booleans or natural numbers. *)
+(** Values are terms that cannot be reduced further. In this language, values are
+  * either booleans or natural numbers. *)
 Inductive bvalue : tm -> Prop :=
   | bv_true : bvalue <{ true }>
   | bv_false : bvalue <{ false }>.
@@ -77,9 +77,9 @@ Hint Unfold value : core.
 
 (** ** Operational Semantics *)
 (** The operational semantics of the language is defined using a reduction 
-  * relation. The reduction relation describes how terms can be reduced to simpler
-  * terms. The semantics is designed to be deterministic, meaning that each term
-  * has a unique normal form if it can be reduced. *)
+  * relation. The reduction relation describes how terms can be reduced to
+  * simpler terms. The semantics is designed to be deterministic, meaning that
+  * each term has a unique normal form if it can be reduced. *)
 
 (** Reduction *)
 (** The reduction relation is defined inductively. It describes how terms can be
@@ -201,7 +201,7 @@ Qed.
 
 (** ** Progress *)
 (** The progress theorem states that if a term has a type, it is either a value or
-  * can take a step in the reduction relation. This is crucial for ensuring that 
+  * can take a step in the reduction relation. This is crucial for ensuring that
   * the language is well-defined and that terms can be evaluated. *)
 Theorem progress : forall t T,
   ⊢ t ∈: T ->
