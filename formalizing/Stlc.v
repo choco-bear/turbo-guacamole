@@ -135,8 +135,6 @@ Notation "∅" := (∅ : gmap string type) : ctx_scope.
 Notation "x : τ ; Γ" := (<[x:=τ%ty]>Γ%ctx)
   (at level 60, τ at level 99, Γ at level 99, right associativity) : ctx_scope.
 
-Local Open Scope ctx_scope.
-
 (** Typing Rules *)
 (** Typing judgments are of the form [Γ ⊢ e : τ], meaning that in context [Γ],
   * expression [e] has type [τ]. *)
@@ -167,36 +165,36 @@ Hint Constructors has_type : core.
 (** These lemmas are used to manipulate contexts, particularly for
   * looking up variables and ensuring that the context behaves as expected. *)
 Lemma ctx_empty x :
-  ∅ !! x = None.
+  ∅%ctx !! x = None.
 Proof. done. Qed.
 
 Lemma ctx_eq x τ (Γ : ctx) :
-  (x : τ; Γ) !! x = Some τ.
+  (x : τ; Γ)%ctx !! x = Some τ.
 Proof.
   apply lookup_insert.
 Qed.
 
 Lemma ctx_eq_inv x τ σ (Γ : ctx) :
-  (x : τ; Γ) !! x = Some σ →
+  (x : τ; Γ)%ctx !! x = Some σ →
   τ = σ.
 Proof.
   rewrite ctx_eq; intro; solve_by_invert.
 Qed.
 
 Lemma ctx_neq x y τ (Γ : ctx) :
-  x ≠ y → (y : τ; Γ) !! x = Γ !! x.
+  x ≠ y → (y : τ; Γ)%ctx !! x = Γ !! x.
 Proof.
   by intro; apply lookup_insert_ne.
 Qed.
 
 Lemma ctx_shadow x τ τ' (Γ : ctx) :
-  (x : τ; x : τ'; Γ) = x : τ; Γ.
+  (x : τ; x : τ'; Γ)%ctx = (x : τ; Γ)%ctx.
 Proof.
   apply insert_insert.
 Qed.
 
 Lemma ctx_permute x y τ σ (Γ : ctx) :
-  x ≠ y → (x : τ; y : σ; Γ) = (y : σ; x : τ; Γ).
+  x ≠ y → (x : τ; y : σ; Γ)%ctx = (y : σ; x : τ; Γ)%ctx.
 Proof.
   apply insert_commute.
 Qed.
@@ -332,15 +330,14 @@ Qed.
 (** Free Variables *)
 (** The free variables of an expression are defined as those variables that
   * appear in the expression but are not bound by a lambda abstraction. *)
-Fixpoint free_vars (e : expr) : list string :=
+Fixpoint free_vars (e : expr) : gset string :=
   match e with
-  | Var x => [x]
-  | Lam x e' => List.filter (fun y => negb (x =? y)) (free_vars e')
-  | App e1 e2 => free_vars e1 ++ free_vars e2
-  | Const _ _ => []
+  | Var x => {[x]}
+  | Lam x e' => (free_vars e') ∖ {[x]}
+  | App e1 e2 => (free_vars e1) ∪ (free_vars e2)
+  | Const _ _ => ∅%stdpp
   end.
-Notation "x '∈' 'FV' e" := (In x (free_vars e)) (at level 70, e at level 40).
-Notation "x '∉' 'FV' e" := (¬ In x (free_vars e)) (at level 70, e at level 40).
+Notation "'FV' e" := (free_vars e) (at level 60).
 
 (** Closed Expressions *)
 (** An expression is closed if it has no free variables, meaning all variables
@@ -359,12 +356,10 @@ Theorem free_in_ctx x e τ Γ :
   Γ ⊢ e : τ →
   ∃ τ', Γ !! x = Some τ'.
 Proof.
-  intros. revert H. induction H0; intros; simpl in *; intuition.
-  - apply in_app_or in H as []; auto.
-  - rewrite filter_In in H; intuition.
-    bdestruct (x0 =? x); subst; try solve_by_invert.
-    destruct H as [τ' H]; rewrite ctx_neq in H; eauto.
-  - subst; eauto.
+  intros. revert H. induction H0; intros; simpl in *; set_unfold; intuition.
+  - destruct H. exists x1.
+    by rewrite ctx_neq in H.
+  - set_solver.
 Qed.
 
 Corollary has_type_closed e τ :
@@ -387,11 +382,12 @@ Theorem ctx_invariance e τ Γ Γ' :
   Γ' ⊢ e : τ.
 Proof.
   intro; revert Γ'; induction H; intros; auto.
-  - eauto 10 using in_or_app.
+  - econstructor; [ apply IHhas_type1
+                  | apply IHhas_type2]; intros; apply H1; set_solver.
   - constructor. apply IHhas_type. intros.
     bdestruct (x =? x0); subst; rewrite ?ctx_eq, ?ctx_neq; eauto.
-    by apply H0; simpl; rewrite filter_In, (proj2 (eqb_neq _ _)).
-  - rewrite (H0 x) in H; by first [left | constructor].
+    apply H0. set_solver.
+  - rewrite (H0 x) in H; by first [constructor | set_solver].
 Qed.
 
 Corollary closed_strengthen e τ Γ :
