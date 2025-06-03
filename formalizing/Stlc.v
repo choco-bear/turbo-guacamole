@@ -151,7 +151,6 @@ Delimit Scope ty_scope with ty.
 Coercion TyBase : string >-> type.
 Notation "A → B" := (TyArrow A%ty B%ty) : ty_scope.
 
-(** The below are just for human readable notation. *)
 Declare Scope ctx_scope.
 Delimit Scope ctx_scope with ctx.
 Notation "∅" := (∅ : gmap string type) : ctx_scope.
@@ -323,7 +322,7 @@ Section Soundness.
     ¬ stuck e'.
   Proof.
     intros Hty Hrtc. induction Hrtc as [e | e e' e'' Hred Hrtc IH].
-    - apply progress in Hty as [Hv|[e' Hred]]; intros []; by eauto.
+    - apply progress in Hty as [Hv|[e' Hred]]; intros []; eauto.
     - eauto using preservation.
   Qed.
 
