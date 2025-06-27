@@ -612,7 +612,7 @@ Section Lemmas.
       Γ ⊢ v : τ1 + τ2 →
       ∃ v', value v' ∧ (v = (inl v') ∧ Γ ⊢ v' : τ1 ∨
                         v = (inr v') ∧ Γ ⊢ v' : τ2).
-    Proof. intros; inversion H; solve_by_inverts 2. Qed.
+    Proof. intros; inversion H; inversion H0; subst; solve_by_invert. Qed.
   End Canonical.
 
   Section ContextInvariance.
@@ -742,7 +742,7 @@ Section Soundness.
     remember ∅ as Γ. induction 1; eauto; intuition; try naive_solver;
       try solve [ apply bool_canonical in H as [[] ->]; naive_solver
                 | apply prod_canonical in H; naive_solver
-                | apply sum_canonical in H; naive_solver].
+                | apply sum_canonical in H; naive_solver ].
     - right; intuition; try naive_solver.
       apply arrow_canonical in H as (x & e & ->); eauto.
     - destruct bop0, τ1, τ2; cbn in *; try naive_solver;
