@@ -151,16 +151,11 @@ Delimit Scope ty_scope with ty.
 Coercion TyBase : string >-> type.
 Notation "A → B" := (TyArrow A%ty B%ty) : ty_scope.
 
-Local Open Scope ty_scope.
-
-(** The below are just for human readable notation. *)
 Declare Scope ctx_scope.
 Delimit Scope ctx_scope with ctx.
 Notation "∅" := (∅ : gmap string type) : ctx_scope.
 Notation "x : τ ; Γ" := (<[x:=τ%ty]>Γ%ctx)
   (at level 60, τ at level 99, Γ at level 99, right associativity) : ctx_scope.
-
-Local Open Scope ctx_scope.
 
 Notation "Γ '⊢' e ':' τ" := (has_type Γ%ctx e%E τ%ty)
   (at level 70, e at level 40, τ at level 40).
@@ -327,7 +322,7 @@ Section Soundness.
     ¬ stuck e'.
   Proof.
     intros Hty Hrtc. induction Hrtc as [e | e e' e'' Hred Hrtc IH].
-    - apply progress in Hty as [Hv|[e' Hred]]; intros []; by eauto.
+    - apply progress in Hty as [Hv|[e' Hred]]; intros []; eauto.
     - eauto using preservation.
   Qed.
 
@@ -444,10 +439,10 @@ Section Further.
     ¬ ∅ ⊢ (λ: "x", "x" "x") : τ.
   Proof.
     intro. inversion H; subst.
-    assert (∃ τ, τ = (τ → τ2)) as [τ H0].
+    assert (∃ τ, τ = (τ → τ2)%ty) as [τ H0].
     { inversion H4; inversion H3; inversion H9; 
       inversion H6; inversion H2; inversion H14; subst; eauto. }
-    assert (type_size τ = type_size (τ → τ2)) by by rewrite <-H0.
+    assert (type_size τ = type_size (τ → τ2)%ty) by by rewrite <-H0.
     apply (type_size_not_0 τ2). simpl in *. lia.
   Qed.
 

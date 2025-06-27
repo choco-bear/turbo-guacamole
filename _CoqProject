@@ -1,8 +1,10 @@
 # Logical path
 -R theories Intro2TT
+-R formalizing Formalizing
 
 # Coq files
 theories/Tactics.v
 
 formalizing/MotivationOfTypes.v
 formalizing/Stlc.v
+formalizing/StlcMore.v
