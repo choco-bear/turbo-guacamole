@@ -26,19 +26,19 @@ Section Syntax.
   (** Operators *)
   (** The language includes binary operators for arithmetic, comparison, and logic,
     * as well as unary operators for negation and boolean negation. *)
-  Inductive bop : Type := 
+  Inductive bin_op : Type := 
     (* Integer Arithmetics *)
-    | Plus | Minus | Mult | Div
+    | PlusOp | MinusOp | MultOp | DivOp | ModOp
     (* Integer Comparison *)
-    | IEq | Lt
+    | LtOp | LeOp | EqOp
     (* Logic Operations *)
-    | BEq | And | Or
+    | AndOp | OrOp
     .
-  Inductive uop : Type :=
-    (* Unary Minus *)
-    | UMinus
+  Inductive un_op : Type :=
     (* Boolean Negation *)
-    | Neg
+    | NegOp
+    (* Unary Minus *)
+    | MinusUnOp
     .
   
   (** Literals *)
@@ -63,8 +63,8 @@ Section Syntax.
     (* Literal *)
     | Lit : lit → expr
     (* Operators *)
-    | Bop : bop → expr → expr → expr
-    | Uop : uop → expr → expr
+    | Bop : bin_op → expr → expr → expr
+    | Uop : un_op → expr → expr
     (* If then else *)
     | ITE : expr → expr → expr → expr
     (* Let *)
@@ -128,18 +128,18 @@ Coercion LitInt : Z >-> lit.
 Coercion LitBool : bool >-> lit.
 Coercion LitUnit : unit >-> lit.
 
-Infix "+" := (Bop Plus) : expr_scope.
-Infix "-" := (Bop Minus) : expr_scope.
-Infix "*" := (Bop Mult) : expr_scope.
-Infix "/" := (Bop Div) : expr_scope.
-Infix "=?" := (Bop IEq) : expr_scope.
-Infix "<?" := (Bop Lt) : expr_scope.
-Infix "=?" := (Bop BEq) : expr_scope.
-Infix "&&" := (Bop And) : expr_scope.
-Infix "||" := (Bop Or) : expr_scope.
+Infix "+" := (Bop PlusOp) : expr_scope.
+Infix "-" := (Bop MinusOp) : expr_scope.
+Infix "*" := (Bop MultOp) : expr_scope.
+Infix "/" := (Bop DivOp) : expr_scope.
+Infix "=?" := (Bop EqOp) : expr_scope.
+Infix "<?" := (Bop LtOp) : expr_scope.
+Infix "<=?" := (Bop LeOp) : expr_scope.
+Infix "&&" := (Bop AndOp) : expr_scope.
+Infix "||" := (Bop OrOp) : expr_scope.
 
-Notation "'-' e" := (Uop UMinus e%E) : expr_scope.
-Notation "'¬' e" := (Uop Neg e%E) : expr_scope.
+Notation "'-' e" := (Uop MinusUnOp e%E) : expr_scope.
+Notation "'¬' e" := (Uop NegOp e%E) : expr_scope.
 
 Notation "'if:' e1 'then' e2 'else' e3" := (ITE e1%E e2%E e3%E)
   (at level 200, e1, e2, e3 at level 200) : expr_scope.
@@ -216,33 +216,34 @@ Section Semantics.
     * two literals (for binary operators) or one literal (for unary operators) and
     * return an option type indicating the result of the operation. If the operation
     * is valid, it returns Some result; otherwise, it returns None. *)
-  Definition bop_eval : bop → lit → lit → option lit :=
+  Definition bop_eval : bin_op → lit → lit → option lit :=
     λ bop l1 l2, 
       match (l1, l2) with
       | (LitInt n1, LitInt n2) => (
           match bop with
-          | Plus => Some (LitInt (n1 + n2))
-          | Minus => Some (LitInt (n1 - n2))
-          | Mult => Some (LitInt (n1 * n2))
-          | Div => Some (LitInt (n1 / n2))
-          | IEq => Some (LitBool (n1 =? n2)%Z)
-          | Lt => Some (LitBool (n1 <? n2)%Z)
+          | PlusOp => Some (LitInt (n1 + n2))
+          | MinusOp => Some (LitInt (n1 - n2))
+          | MultOp => Some (LitInt (n1 * n2))
+          | DivOp => Some (LitInt (n1 / n2))
+          | ModOp => Some (LitInt (n1 mod n2))
+          | EqOp => Some (LitBool (n1 =? n2)%Z)
+          | LtOp => Some (LitBool (n1 <? n2)%Z)
+          | LeOp => Some (LitBool (n1 <=? n2)%Z)
           | _ => None
           end)
       | (LitBool b1, LitBool b2) => (
           match bop with
-          | BEq => Some (LitBool (eqb b1 b2))
-          | And => Some (LitBool (andb b1 b2))
-          | Or => Some (LitBool (orb b1 b2))
+          | AndOp => Some (LitBool (andb b1 b2))
+          | OrOp => Some (LitBool (orb b1 b2))
           | _ => None
           end)
       | _ => None
       end.
-  Definition uop_eval : uop → lit → option lit :=
+  Definition uop_eval : un_op → lit → option lit :=
     λ uop l,
       match (uop, l) with
-      | (UMinus, LitInt n) => Some (LitInt (-n))
-      | (Neg, LitBool b) => Some (LitBool (negb b))
+      | (MinusUnOp, LitInt n) => Some (LitInt (-n))
+      | (NegOp, LitBool b) => Some (LitBool (negb b))
       | _ => None
       end.
 
@@ -371,31 +372,32 @@ Section TypeSystem.
   (** The typing relation defines how expressions can be assigned types based on
     * their structure and the typing context. It captures the rules of the type
     * system and ensures that well-typed expressions can be reduced safely. *)
-  Definition bop_type : bop → type → type → option type :=
+  Definition bop_type : bin_op → type → type → option type :=
     λ bop τ1 τ2,
       match (bop, τ1, τ2) with
       (* Integer Arithmetics *)
-      | (Plus, TyInt, TyInt) => Some TyInt
-      | (Minus, TyInt, TyInt) => Some TyInt
-      | (Mult, TyInt, TyInt) => Some TyInt
-      | (Div, TyInt, TyInt) => Some TyInt
+      | (PlusOp, TyInt, TyInt) => Some TyInt
+      | (MinusOp, TyInt, TyInt) => Some TyInt
+      | (MultOp, TyInt, TyInt) => Some TyInt
+      | (DivOp, TyInt, TyInt) => Some TyInt
+      | (ModOp, TyInt, TyInt) => Some TyInt
       (* Integer Comparison *)
-      | (IEq, TyInt, TyInt) => Some TyBool
-      | (Lt, TyInt, TyInt) => Some TyBool
+      | (LtOp, TyInt, TyInt) => Some TyBool
+      | (LeOp, TyInt, TyInt) => Some TyBool
+      | (EqOp, TyInt, TyInt) => Some TyBool
       (* Logic Operations *)
-      | (BEq, TyBool, TyBool) => Some TyBool
-      | (And, TyBool, TyBool) => Some TyBool
-      | (Or, TyBool, TyBool) => Some TyBool
+      | (AndOp, TyBool, TyBool) => Some TyBool
+      | (OrOp, TyBool, TyBool) => Some TyBool
       (* Other cases are invalid *)
       | _ => None
       end.
-  Definition uop_type : uop → type → option type :=
+  Definition uop_type : un_op → type → option type :=
     λ uop τ,
       match (uop, τ) with
       (* Integer Negation *)
-      | (UMinus, TyInt) => Some TyInt
+      | (MinusUnOp, TyInt) => Some TyInt
       (* Boolean Negation *)
-      | (Neg, TyBool) => Some TyBool
+      | (NegOp, TyBool) => Some TyBool
       (* Other cases are invalid *)
       | _ => None
       end.
@@ -745,10 +747,10 @@ Section Soundness.
                 | apply sum_canonical in H; naive_solver ].
     - right; intuition; try naive_solver.
       apply arrow_canonical in H as (x & e & ->); eauto.
-    - destruct bop0, τ1, τ2; cbn in *; try naive_solver;
+    - destruct bop, τ1, τ2; cbn in *; try naive_solver;
       first [ apply int_canonical in H, H0
             | apply bool_canonical in H, H0 ]; naive_solver.
-    - destruct uop0, τ; cbn in *; try naive_solver; 
+    - destruct uop, τ; cbn in *; try naive_solver; 
       first [ apply int_canonical in H
             | apply bool_canonical in H ]; naive_solver.
   Qed.
@@ -764,12 +766,12 @@ Section Soundness.
     - inversion H3; subst; eauto.
       eapply substitution_preserves_typing; solve_by_invert.
     - inversion H4; subst; eauto.
-      destruct bop0, τ1, τ2; cbn in *; 
+      destruct bop, τ1, τ2; cbn in *;
       first [ apply int_canonical in H, H0
             | apply bool_canonical in H, H0
             | idtac ]; naive_solver.
     - inversion H2; subst; eauto.
-      destruct uop0, τ; cbn in *;
+      destruct uop, τ; cbn in *;
       first [ apply int_canonical in H
             | apply bool_canonical in H
             | idtac ]; naive_solver.
