@@ -1,0 +1,85 @@
+From Formalizing.StlcMore Require Export lang.
+
+(** This file defines notations and coercions for the STLC language. *)
+
+(** Coercions to make programs easier to type. *)
+Coercion of_val : val >-> expr.
+Coercion LitInt : Z >-> base_lit.
+Coercion LitBool : bool >-> base_lit.
+Coercion App : expr >-> Funclass.
+Coercion Var : string >-> expr.
+
+(** Define some derived forms. *)
+Notation Let x e1 e2 := (App (Lam x e2) e1) (only parsing).
+Notation Seq e1 e2 := (Let BAnon e1 e2) (only parsing).
+Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)) (only parsing).
+
+(* No scope for the values, does not conflict and scope is often not inferred
+properly. *)
+Notation "# l" := (LitV l%Z%V%stdpp) (at level 8, format "# l").
+Notation "# l" := (Lit l%Z%E%stdpp) (at level 8, format "# l") : expr_scope.
+
+(** Tuple syntax inspired by Ocaml. Constructions with higher precedence come
+    first. *)
+Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : expr_scope.
+Notation "( e1 , e2 , .. , en )" := (PairV .. (PairV e1 e2) .. en) : val_scope.
+
+(** Match syntax inspired by Coq. *)
+Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
+  (Match e0 x1%binder e1 x2%binder e2)
+  (e0, x1, e1, x2, e2 at level 200,
+   format "'[hv' 'match:'  e0  'with'  '/  ' '[' 'InjL'  x1  =>  '/  ' e1 ']'  '/' '[' |  'InjR'  x2  =>  '/  ' e2 ']'  '/' 'end' ']'") : expr_scope.
+Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
+  (Match e0 x2%binder e2 x1%binder e1)
+  (e0, x1, e1, x2, e2 at level 200, only parsing) : expr_scope.
+
+(** Unit literal. *)
+Notation "()" := LitUnit : val_scope.
+
+(** Notations for built-in operations *)
+Notation "- e" := (UnOp MinusUnOp e%E) : expr_scope.
+Notation "¬ e" := (UnOp NegOp e%E) : expr_scope.
+Notation "'len' e" := (UnOp LenOp e%E) (at level 65) : expr_scope.
+Notation "e1 + e2" := (BinOp PlusOp e1%E e2%E) : expr_scope.
+Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E) : expr_scope.
+Notation "e1 * e2" := (BinOp MultOp e1%E e2%E) : expr_scope.
+Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) : expr_scope.
+Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) : expr_scope.
+Notation "e1 < e2" := (BinOp LtOp e1%E e2%E) : expr_scope.
+Notation "e1 ∧ e2" := (BinOp AndOp e1%E e2%E) : expr_scope.
+Notation "e1 ∨ e2" := (BinOp OrOp e1%E e2%E) : expr_scope.
+Notation "e1 ++ e2" := (BinOp ConcatOp e1%E e2%E) : expr_scope.
+Notation "e1 '=ₛₜᵣ' e2" := (BinOp StrEqOp e1%E e2%E) (at level 70) : expr_scope.
+Notation "e1 'prefix' e2" := (BinOp PrefixOp e1%E e2%E) (at level 70) : expr_scope.
+
+(** Conditional syntax inspired by Coq. *)
+Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
+  (at level 200, e1, e2, e3 at level 200) : expr_scope.
+
+
+(** Lambda syntax inspired by Coq. *)
+(** The [λ] notation is used for lambda abstractions, with the binder being either a
+  * named variable or an anonymous binder. The [λ] notation is defined in two
+  * scopes: [expr_scope] for expressions and [val_scope] for values. The [λ]
+  * notation allows for multiple binders in a single lambda abstraction, similar to
+  * how it is done in Coq. *)
+Notation "λ: x , e" := (Lam x%binder e%E)
+  (at level 200, x at level 1, e at level 200,
+   format "'[' 'λ:'  x ,  '/  ' e ']'") : expr_scope.
+Notation "λ: x y .. z , e" := (Lam x%binder (Lam y%binder .. (Lam z%binder e%E) ..))
+  (at level 200, x, y, z at level 1, e at level 200,
+   format "'[' 'λ:'  x  y  ..  z ,  '/  ' e ']'") : expr_scope.
+
+Notation "λ: x , e" := (LamV x%binder e%E)
+  (at level 200, x at level 1, e at level 200,
+   format "'[' 'λ:'  x ,  '/  ' e ']'") : val_scope.
+Notation "λ: x y .. z , e" := (LamV x%binder (Lam y%binder .. (Lam z%binder e%E) .. ))
+  (at level 200, x, y, z at level 1, e at level 200,
+   format "'[' 'λ:'  x  y  ..  z ,  '/  ' e ']'") : val_scope.
+
+(** Syntactic sugar for let-binding and sequencing. *)
+Notation "'let:' x := e1 'in' e2" := (Lam x%binder e2%E e1%E)
+  (only parsing, at level 200, x at level 1, e1, e2 at level 200) : expr_scope.
+Notation "e1 ;; e2" := (Lam BAnon e2%E e1%E)
+  (at level 100, e2 at level 200,
+   format "'[' '[hv' '[' e1 ']' ;;  ']' '/' e2 ']'") : expr_scope.

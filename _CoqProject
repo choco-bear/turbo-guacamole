@@ -4,7 +4,17 @@
 
 # Coq files
 theories/Tactics.v
+theories/lib/sets.v
+theories/lib/maps.v
 
 formalizing/MotivationOfTypes.v
 formalizing/Stlc.v
-formalizing/StlcMore.v
+formalizing/StlcMore/lang.v
+formalizing/StlcMore/notation.v
+formalizing/StlcMore/small_step.v
+formalizing/StlcMore/ctx_step.v
+formalizing/StlcMore/big_step.v
+formalizing/StlcMore/steps.v
+formalizing/StlcMore/type.v
+formalizing/StlcMore/soundness.v
+formalizing/SystemF/lang.v

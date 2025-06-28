@@ -10,7 +10,7 @@ Ltac solve_by_inverts n :=
       inversion H;
       match n with
       | S (S (?n')) => subst; solve_by_inverts (S n') 
-      | 1 => subst; eauto
+      | 1 => subst; simpl in *; eauto
       end ]
   end end.
 
