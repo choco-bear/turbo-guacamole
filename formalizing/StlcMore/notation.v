@@ -16,8 +16,8 @@ Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)) (only parsing
 
 (* No scope for the values, does not conflict and scope is often not inferred
 properly. *)
-Notation "# l" := (LitV l%Z%V%stdpp) (at level 8, format "# l").
-Notation "# l" := (Lit l%Z%E%stdpp) (at level 8, format "# l") : expr_scope.
+Notation "# l" := (LitV l%Z%string%V%stdpp) (at level 8, format "# l").
+Notation "# l" := (Lit l%Z%string%E%stdpp) (at level 8, format "# l") : expr_scope.
 
 (** Tuple syntax inspired by Ocaml. Constructions with higher precedence come
     first. *)
