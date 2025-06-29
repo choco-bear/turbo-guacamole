@@ -18,3 +18,4 @@ formalizing/StlcMore/steps.v
 formalizing/StlcMore/type.v
 formalizing/StlcMore/soundness.v
 formalizing/SystemF/lang.v
+formalizing/SystemF/notation.v

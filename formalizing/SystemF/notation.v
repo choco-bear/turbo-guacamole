@@ -1,9 +1,10 @@
-From Formalizing.SystemF Require Export lang.
+From Formalizing.SystemF Require Import lang.
 
 (** Coercions to make programs easier to type. *)
 Coercion of_val : val >-> expr.
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
+Coercion LitString : string >-> base_lit.
 Coercion App : expr >-> Funclass.
 Coercion Var : string >-> expr.
 
@@ -12,13 +13,12 @@ Notation Let x e1 e2 := (App (Lam x e2) e1) (only parsing).
 Notation Seq e1 e2 := (Let BAnon e1 e2) (only parsing).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)) (only parsing).
 
-(* No scope for the values, does not conflict and scope is often not inferred
-properly. *)
-Notation "# l" := (LitV l%Z%V%stdpp) (at level 8, format "# l").
-Notation "# l" := (Lit l%Z%E%stdpp) (at level 8, format "# l") : expr_scope.
+(** No scope for the values, does not conflict and scope is often not inferred
+  * properly. *)
+Notation "# l" := (LitV l%Z%string%V%stdpp) (at level 8, format "# l").
+Notation "# l" := (Lit l%Z%string%E%stdpp) (at level 8, format "# l") : expr_scope.
 
-(** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
-    first. *)
+(** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come first. *)
 Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : expr_scope.
 Notation "( e1 , e2 , .. , en )" := (PairV .. (PairV e1 e2) .. en) : val_scope.
 
@@ -32,14 +32,25 @@ Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
 
 Notation "()" := LitUnit : val_scope.
 
+Notation "- e" := (UnOp MinusUnOp e%E) : expr_scope.
+Notation "¬ e" := (UnOp NegOp e%E) : expr_scope.
+Notation "'len' e" := (UnOp LenOp e%E) (at level 65) : expr_scope.
 Notation "e1 + e2" := (BinOp PlusOp e1%E e2%E) : expr_scope.
 Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E) : expr_scope.
 Notation "e1 * e2" := (BinOp MultOp e1%E e2%E) : expr_scope.
-Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) : expr_scope.
-Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) : expr_scope.
 Notation "e1 < e2" := (BinOp LtOp e1%E e2%E) : expr_scope.
-
-(*Notation "~ e" := (UnOp NegOp e%E) (at level 75, right associativity) : expr_scope.*)
+Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) : expr_scope.
+Notation "e1 > e2" := (BinOp GtOp e1%E e2%E) : expr_scope.
+Notation "n1 ≥ n2" := (n1%Z >= n2%Z) : Z_scope.
+Notation "e1 ≥ e2" := (BinOp GeOp e1%E e2%E) : expr_scope.
+Notation "e1 ∧ e2" := (BinOp AndOp e1%E e2%E) : expr_scope.
+Notation "e1 ∨ e2" := (BinOp OrOp e1%E e2%E) : expr_scope.
+Notation "e1 → e2" := (BinOp SubOp e1%E e2%E) : expr_scope.
+Notation "e1 ++ e2" := (BinOp ConcatOp e1%E e2%E) : expr_scope.
+Notation "e1 'prefix' e2" := (BinOp PrefixOp e1%E e2%E) (at level 70) : expr_scope.
+Notation "e1 'substr' e2" := (BinOp SubstrOp e1%E e2%E) (at level 70) : expr_scope.
+Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) : expr_scope.
+Notation "e1 ≠ e2" := (BinOp NeqOp e1%E e2%E) : expr_scope.
 
 Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
   (at level 200, e1, e2, e3 at level 200) : expr_scope.
