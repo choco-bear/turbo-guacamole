@@ -1,6 +1,8 @@
 From Coq Require Import Bool Bool.Bool Strings.String.
 From Coq.Arith Require Import Arith Compare_dec.
-From stdpp Require Export tactics.
+From stdpp Require Export relations tactics.
+From stdpp Require Import binders strings gmap.
+From Intro2TT Require Import lib.facts.
 
 (** Solve by inverts *)
 Ltac solve_by_inverts n :=
@@ -92,3 +94,24 @@ Ltac bdestruct X :=
     [ auto with bdestruct
     | destruct H as [H|H];
       [ | try first [apply not_lt in H | apply not_le in H]]].
+
+
+
+(** list manipulations *)
+Ltac simplify_list_elem :=
+  simpl;
+  repeat match goal with
+         | |- ?x ∈ ?y :: ?l => apply elem_of_cons; first [left; reflexivity | right]
+         | |- _ ∉ [] => apply not_elem_of_nil
+         | |- _ ∉ _ :: _ => apply not_elem_of_cons; split
+  end; try fast_done.
+Ltac simplify_list_subseteq :=
+  simpl;
+  repeat match goal with
+         | |- ?x :: _ ⊆ ?x :: _ => apply list_subseteq_cons_l
+         | |- ?x :: _ ⊆ _ => apply list_subseteq_cons_elem; first solve [simplify_list_elem]
+         | |- elements _ ⊆ elements _ => apply elements_subseteq; set_solver
+         | |- [] ⊆ _ => apply list_subseteq_nil
+         | |- ?x :b: _ ⊆ ?x :b: _ => apply list_subseteq_cons_binder
+         end;
+  try fast_done.

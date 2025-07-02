@@ -3,9 +3,10 @@
 -R formalizing Formalizing
 
 # Coq files
-theories/Tactics.v
 theories/lib/sets.v
 theories/lib/maps.v
+theories/lib/facts.v
+theories/Tactics.v
 
 formalizing/MotivationOfTypes.v
 formalizing/Stlc.v
