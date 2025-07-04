@@ -213,3 +213,23 @@ Lemma subst_is_closed_nil e x es : is_closed [] e → subst x es e = e.
 Proof. intros. apply subst_is_closed with []; set_solver. Qed.
 Lemma subst'_is_closed_nil e x es : is_closed [] e → subst' x es e = e.
 Proof. intros. destruct x as [ | x]. { done. } by apply subst_is_closed_nil. Qed.
+
+Lemma is_closed_permutation X Y e :
+  X ≡ₚ Y → is_closed X e = is_closed Y e.
+Proof.
+  intros HXY.
+  induction e in X, Y, HXY |-*; simpl;
+  repeat match goal with
+  | HXY : ?X ≡ₚ ?Y, H : ∀ X Y, X ≡ₚ Y → is_closed X ?e = is_closed Y ?e |- _ =>
+      rewrite (H X Y HXY)
+  end; try done.
+  - apply bool_decide_ext; by rewrite HXY.
+  - destruct x as [|x]; eauto. apply IHe. by constructor.
+Qed.
+
+Global Instance is_closed_Permutation :
+  Proper (Permutation ==> eq ==> eq) is_closed.
+Proof.
+  intros X Y HXY e _ <-.
+  by apply is_closed_permutation.
+Defined.
