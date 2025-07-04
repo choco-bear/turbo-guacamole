@@ -121,3 +121,19 @@ Proof.
   intros Hes Hx%sets.singleton_subseteq_l.
   by apply free_variables_do_subst.
 Qed.
+
+Lemma subst_free_variables x es e :
+  x ∉ FV e → subst x es e = e.
+Proof.
+  intro Hx.
+  eapply (subst_is_closed (elements (FV e)));
+    last by rewrite elem_of_elements.
+  by apply free_variables_is_closed.
+Qed.
+
+Lemma subst_free_variables_empty x es e :
+  FV e = ∅ → subst x es e = e.
+Proof. intros Hes. apply subst_free_variables. set_solver. Qed.
+Lemma subst'_free_variables_empty x es e :
+  FV e = ∅ → subst' x es e = e.
+Proof. destruct x as [|x]; [simpl; set_solver|apply subst_free_variables_empty]. Qed.
