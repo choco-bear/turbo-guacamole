@@ -10,6 +10,7 @@ theories/Tactics.v
 
 formalizing/MotivationOfTypes.v
 formalizing/Stlc.v
+
 formalizing/StlcMore/lang.v
 formalizing/StlcMore/notation.v
 formalizing/StlcMore/small_step.v
@@ -18,5 +19,7 @@ formalizing/StlcMore/big_step.v
 formalizing/StlcMore/steps.v
 formalizing/StlcMore/type.v
 formalizing/StlcMore/soundness.v
+formalizing/StlcMore/tactics.v
+
 formalizing/SystemF/lang.v
 formalizing/SystemF/notation.v
