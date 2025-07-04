@@ -66,16 +66,25 @@ Lemma typed_preservation_base_step e e' A:
   ∅ ⊢ e' : A.
 Proof.
   intros Hty Hstep.
-  destruct Hstep as [  ]; subst; try solve_by_invert; try solve_by_inverts 2.
-  - eapply app_inversion in Hty as (B & H1 & H2).
+  destruct Hstep as [  ]; subst; try solve_by_invert.
+  4-7: inversion Hty; subst. (* SLOW *)
+  4-5: by inversion H3.
+  4-5: inversion H4; eauto.
+  {
+    eapply app_inversion in Hty as (B & H1 & H2).
     destruct x as [|x].
     { eapply lam_anon_inversion in H1 as (C & D & [= -> ->] & Hty). done. }
     eapply lam_inversion in H1 as (C & D & Heq & Hty).
     injection Heq as -> ->.
     eapply typed_substitutivity; eauto.
-  - destruct l, l', op; simpl in *; simplify_option_eq; solve_by_inverts 3.
-  - destruct l1, l2, l', op; simpl in *;
-    simplify_option_eq; inversion Hty; subst; solve_by_inverts 3.
+  } {
+    destruct l, l', op; simpl in *; simplify_option_eq; inversion Hty; subst;
+    inversion H4; destruct A0; simplify_option_eq; eauto.
+  } {
+    destruct l1, l2, l', op; simpl in *;
+    simplify_option_eq; inversion Hty; subst;
+    inversion H6; destruct A0, B; simplify_option_eq; eauto.
+  }
 Qed.
 
 (** Preservation Theorem *)
