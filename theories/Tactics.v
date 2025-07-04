@@ -115,3 +115,15 @@ Ltac simplify_list_subseteq :=
          | |- ?x :b: _ ⊆ ?x :b: _ => apply list_subseteq_cons_binder
          end;
   try fast_done.
+
+
+(** destruct if *)
+(* This tactic destructs if expressions in the goal and hypotheses.
+   It simplifies the goal by removing branches that are impossible. *)
+Ltac des_ifs :=
+  repeat match goal with
+  | |- context [if ?e then _ else _] =>
+    destruct e; simpl; try congruence
+  | H : context [if ?e then _ else _] |- _ =>
+    destruct e; simpl in H; try congruence
+  end.
