@@ -5,6 +5,13 @@ From Formalizing.StlcMore Require Import lang.
 Ltac simplify_closed :=
   simpl; intros;
   repeat match goal with
+  | H : False |- _ => exfalso; assumption
+  | H : Is_true (false) |- _ => simpl in H; exfalso; assumption
+  | H : closed _ _ |- _ => unfold closed in H; simpl in H
+  | H : _ ∧ _ |- _ => destruct H
+  | H : Is_true (is_closed (?x :b: _) _) |- _ => destruct x as [|x]; simpl in H; simpl
+  | H : Is_true (_ && _) |- _ => simpl in H; apply andb_True in H
+  | H : Is_true (bool_decide _) |- _ => apply bool_decide_unpack in H
   | |- closed _ _ => unfold closed; simpl
   | |- Is_true (is_closed [] _) => first [assumption | done]
   | |- Is_true (is_closed _ (lang.subst _ _ _)) => rewrite subst_is_closed_nil; last solve[simplify_closed]
@@ -18,10 +25,5 @@ Ltac simplify_closed :=
   | |- _ ∈ ?A => match type of A with | list _ => simplify_list_elem end
   | |- _ ∉ ?A => match type of A with | list _ => simplify_list_elem end
   | |- _ ≠ _ => congruence
-  | H : closed _ _ |- _ => unfold closed in H; simpl in H
-  | H: Is_true (_ && _) |- _ => simpl in H; apply andb_True in H
-  | H : _ ∧ _ |- _ => destruct H
-  | H : Is_true (bool_decide (_ ∈ _)) |- _ => apply bool_decide_unpack in H; set_solver
-  | H : Is_true (is_closed (?x :b: _) _) |- _ => destruct x as [|x]; simpl in H; simpl
   | |- Is_true (bool_decide (_ ∈ _)) => apply bool_decide_pack; set_solver
   end; try fast_done.
