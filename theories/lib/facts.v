@@ -1,6 +1,9 @@
 From stdpp Require Export relations.
 From stdpp Require Import binders gmap.
 
+Global Instance Proper_Is_true : Proper (eq ==> iff) Is_true.
+Proof. by intros [] _ <-. Defined.
+
 Lemma list_subseteq_cons {X} (A B : list X) x : A ⊆ B → x :: A ⊆ x :: B.
 Proof. intros Hincl. intros y. rewrite !elem_of_cons. naive_solver. Qed.
 Lemma list_subseteq_cons_binder A B x : A ⊆ B → x :b: A ⊆ x :b: B.
