@@ -140,4 +140,24 @@ Section sets.
   Lemma singleton_subseteq x y : ({[ x ]} : gset K) ⊆ {[ y ]} ↔ x = y.
   Proof. set_solver. Qed.
 
+  (** Distributive laws *)
+  Lemma union_intersection X Y Z : X ∪ (Y ∩ Z) = (X ∪ Y) ∩ (X ∪ Z).
+  Proof. set_solver. Qed.
+  Lemma intersection_union X Y Z : X ∩ (Y ∪ Z) = (X ∩ Y) ∪ (X ∩ Z).
+  Proof. set_solver. Qed.
+  Lemma union_difference X Y Z : (X ∖ Z) ∪ (Y ∖ Z) = (X ∪ Y) ∖ Z.
+  Proof. set_solver. Qed.
+  Lemma intersection_difference X Y Z : (X ∖ Z) ∩ (Y ∖ Z) = (X ∩ Y) ∖ Z.
+  Proof. set_solver. Qed.
+
+  (** Difference *)
+  Lemma difference_subseteq X Y : X ∖ Y ⊆ X.
+  Proof. set_solver. Qed.
+  Lemma not_elem_of_difference x X : x ∉ X → X = X ∖ ({[ x ]} : gset K).
+  Proof. set_solver. Qed.
+  Lemma difference_shadow X Y : X ∖ Y ∖ Y = X ∖ Y.
+  Proof. set_solver. Qed.
+  Lemma difference_union X Y Z : (X ∖ Y) ∪ Z = (X ∪ Z) ∖ (Y ∖ Z).
+  Proof. rewrite difference_difference_r_L. set_solver. Qed.
+
 End sets.
