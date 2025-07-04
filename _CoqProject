@@ -21,6 +21,7 @@ formalizing/StlcMore/type.v
 formalizing/StlcMore/soundness.v
 formalizing/StlcMore/tactics.v
 formalizing/StlcMore/free_variables.v
+formalizing/StlcMore/alpha_equivalence.v
 
 formalizing/SystemF/lang.v
 formalizing/SystemF/notation.v
