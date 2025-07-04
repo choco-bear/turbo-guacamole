@@ -2,7 +2,7 @@ From Coq Require Import Bool Bool.Bool Strings.String.
 From Coq.Arith Require Import Arith Compare_dec.
 From stdpp Require Export relations tactics.
 From stdpp Require Import binders strings gmap.
-From Intro2TT Require Import lib.facts.
+From Intro2TT Require Export lib.facts.
 
 (** Solve by inverts *)
 Ltac solve_by_inverts n :=
