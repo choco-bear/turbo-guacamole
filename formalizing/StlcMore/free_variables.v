@@ -28,7 +28,7 @@ Proof. eauto. Qed.
 Goal FV (λ: "x", "x") = ∅.
 Proof. eauto. Qed.
 
-(** Compatibility between FV and is_closed *)
+(** free variables and closedness *)
 Lemma is_closed_free_variables X e :
   is_closed (elements X) e → FV e ⊆ X.
 Proof.
@@ -39,6 +39,17 @@ Proof.
   - pose proof (fin_sets.elements_union_singleton _ _ n).
     rewrite <-H0 in H. apply IHe in H. intros y Hy. rewrite elem_of_difference in Hy.
     destruct Hy as [Hy Hy']. apply H, elem_of_union in Hy. intuition.
+Qed.
+
+Lemma is_closed_free_variables' X e :
+  is_closed X e → elements (FV e) ⊆ X.
+Proof.
+  revert X; induction e; intros X H; simpl in *; simplify_closed; try set_solver.
+  - rewrite fin_sets.elements_singleton. set_solver.
+  - change {[_]} with ({[x]} : gset _).
+    intros y [Hy Hne%not_elem_of_singleton]%elem_of_elements%elem_of_difference.
+    apply IHe in H. assert (y ∈ x :: X → y ∈ X) by by inversion 1.
+    apply H0, H. set_solver.
 Qed.
 
 Lemma free_variables_is_closed X e :
