@@ -132,7 +132,3 @@ Proof. intros Hes. apply subst_free_variables. set_solver. Qed.
 Lemma subst'_free_variables_empty x es e :
   FV e = ∅ → subst' x es e = e.
 Proof. destruct x as [|x]; [simpl; set_solver|apply subst_free_variables_empty]. Qed.
-
-Lemma subst_subst_neq x y M N L : x ≠ y → x ∉ FV L →
-  subst y L (subst x N M) = subst x (subst y L N) (subst y L M).
-Proof. (* TODO *) Admitted.
