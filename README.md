@@ -9,6 +9,7 @@ This version is known to compile with
 - coq 8.20.1
 - coq-stdpp 1.11.0
 - coq-ext-lib 0.13.0
+- coq-autosubst 1.9
 
 The recommended way to install the dependencies is through [opam](https://opam.ocaml.org/doc/Install.html).
 
@@ -25,7 +26,7 @@ opam update
 ```
 4. Install the right version of the dependencies.
 ```
-opam install coq.8.20.1 coq-stdpp.1.11.0 coq-ext-lib.0.13.0
+opam install coq.8.20.1 coq-stdpp.1.11.0 coq-ext-lib.0.13.0 coq-autosubst.1.9
 ```
 
 ## How to Compile
