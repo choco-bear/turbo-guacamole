@@ -1,3 +1,4 @@
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Formalizing.SystemF Require Import lang.
 
 (** Coercions to make programs easier to type. *)
@@ -31,6 +32,7 @@ Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
   (e0, x1, e1, x2, e2 at level 200, only parsing) : expr_scope.
 
 Notation "()" := LitUnit : val_scope.
+Notation "()" := LitUnit : expr_scope.
 
 Notation "- e" := (UnOp MinusUnOp e%E) : expr_scope.
 Notation "¬ e" := (UnOp NegOp e%E) : expr_scope.
