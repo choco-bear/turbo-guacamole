@@ -1,8 +1,8 @@
-Makefile.coq: _CoqProject
-	$(COQBIN)coq_makefile -f _CoqProject -o Makefile.coq
-
 all: Makefile.coq
 	$(MAKE) -f Makefile.coq all
+
+Makefile.coq: _CoqProject
+	$(COQBIN)coq_makefile -f _CoqProject -o Makefile.coq
 
 install: Makefile.coq
 	$(MAKE) -f Makefile.coq install
