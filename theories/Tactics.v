@@ -128,3 +128,7 @@ Ltac des_ifs :=
   | H : context [if ?e then _ else _] |- _ =>
     destruct e; simpl in H; try congruence
   end.
+
+(** Some tactics for convenience *)
+Ltac i := intros.
+Ltac ii := repeat intro.
