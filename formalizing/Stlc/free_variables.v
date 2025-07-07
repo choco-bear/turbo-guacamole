@@ -103,8 +103,8 @@ Proof.
   | |- context[(_ ∪ _) ∖ _] =>
       rewrite <-sets.union_difference
   end.
-  4: rewrite (sets.not_elem_of_difference x (FV e1)); eauto.
-  3: rewrite (sets.not_elem_of_difference x (FV e2)); eauto.
+  4: rewrite (sets.difference_not_elem x (FV e1)); eauto.
+  3: rewrite (sets.difference_not_elem x (FV e2)); eauto.
   all: by rewrite ?difference_shadow.
 Qed.
 

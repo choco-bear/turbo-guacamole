@@ -107,9 +107,9 @@ Proof.
   | |- context[(_ ∪ _) ∖ _] =>
       rewrite <-sets.union_difference
   end.
-  4,8,17-20,24,33-36: rewrite (sets.not_elem_of_difference x (FV e1)); eauto.
-  3,9,14,17,23-25,28,34-36: rewrite (sets.not_elem_of_difference x (FV e2)); eauto.
-  9,13,18,22,28,29,35,36: rewrite (sets.not_elem_of_difference x (FV e3)); eauto.
+  4,8,17-20,24,33-36: rewrite (sets.difference_not_elem x (FV e1)); eauto.
+  3,9,14,17,23-25,28,34-36: rewrite (sets.difference_not_elem x (FV e2)); eauto.
+  9,13,18,22,28,29,35,36: rewrite (sets.difference_not_elem x (FV e3)); eauto.
   all: by rewrite ?difference_shadow.
 Qed.
 
