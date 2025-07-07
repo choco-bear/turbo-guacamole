@@ -30,3 +30,4 @@ formalizing/SystemF/lang.v
 formalizing/SystemF/notation.v
 formalizing/SystemF/tactics.v
 formalizing/SystemF/free_variables.v
+formalizing/SystemF/types.v
