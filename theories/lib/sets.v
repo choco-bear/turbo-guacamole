@@ -153,11 +153,15 @@ Section sets.
   (** Difference *)
   Lemma difference_subseteq X Y : X ∖ Y ⊆ X.
   Proof. set_solver. Qed.
-  Lemma not_elem_of_difference x X : x ∉ X → X = X ∖ ({[ x ]} : gset K).
+  Lemma difference_not_elem x X : x ∉ X → X = X ∖ ({[ x ]} : gset K).
   Proof. set_solver. Qed.
   Lemma difference_shadow X Y : X ∖ Y ∖ Y = X ∖ Y.
   Proof. set_solver. Qed.
   Lemma difference_union X Y Z : (X ∖ Y) ∪ Z = (X ∪ Z) ∖ (Y ∖ Z).
   Proof. rewrite difference_difference_r_L. set_solver. Qed.
+  Lemma difference_empty_r X : X ∖ ∅ = X.
+  Proof. set_solver. Qed.
+  Lemma difference_commute X Y Z : X ∖ Y ∖ Z = X ∖ Z ∖ Y.
+  Proof. set_solver. Qed.
 
 End sets.
