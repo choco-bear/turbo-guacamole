@@ -1,7 +1,8 @@
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Formalizing.SystemF Require Import lang notation free_variables.
+From Formalizing.SystemF Require Import lang notation free_variables tactics.
 From Intro2TT Require Import Tactics lib.maps.
 From Autosubst Require Export Autosubst.
+From stdpp Require Import options.
 
 (** ** Type system for the System F. *)
 (** This file defines the type system for the System F language. *)
@@ -293,12 +294,22 @@ Lemma has_type_closed n Γ e A X :
   TY n; Γ ⊢ e : A →
   (∀ x, x ∈ dom Γ → x ∈ X) →
   is_closed X e.
-Proof. (* TODO *) Admitted.
+Proof.
+  induction 1 in X |-*; simplify_closed; eauto;
+    first [ apply H0, elem_of_dom
+          | apply IHhas_type
+          | apply IHhas_type2 ]; set_solver.
+Qed.
 Lemma has_type_free_variables n Γ e A :
   TY n; Γ ⊢ e : A →
   FV e ⊆ dom Γ.
-Proof. (* TODO *) Admitted.
-
+Proof.
+  induction 1 in |-*; simpl in *; try set_solver; simplify_sets.
+  - done. 
+  - apply IHhas_type in H1. simplify_sets.
+  - destruct H2 as [H2|[H2 H3]]; [ apply IHhas_type1 in H2
+                                 | apply IHhas_type2 in H2 ]; simplify_sets.
+Qed.
 
 (** Lemmas about [type_wf] *)
 Lemma type_wf_mono n m A :
@@ -315,7 +326,12 @@ Proof.
   all: intros [|i] [|j] Hlt; simpl; try lia.
   all: specialize MONO with i j; lia.
 Qed.
-
+Lemma type_wf_up n A :
+  type_wf n A →
+  type_wf (S n) A.[ren (+1)].
+Proof.
+  i. apply type_wf_rename with (δ := S) in H; last lia. by asimpl in H.
+Qed.
 
 (** [A.[δ]], i.e. [A] with the substitution [δ] applied to it, is well-formed under
   * [m] if [A] is well-formed under [n] and all the things we substitute up to [n] are
@@ -324,7 +340,12 @@ Lemma type_wf_subst n m A δ :
   type_wf n A →
   (∀ x, x < n → type_wf m (δ x)) →
   type_wf m A.[δ].
-Proof. (* TODO *) Admitted.
+Proof.
+  induction 1 in m, δ |-*; ii; try solve [asimpl; eauto].
+  all: econstructor; apply IHtype_wf; ii.
+  all: destruct x; first (asimpl; eauto with lia).
+  all: apply type_wf_rename; simpl; eauto with lia.
+Qed.
 
 Lemma type_wf_single_subst n A B :
   type_wf n B →
@@ -346,11 +367,19 @@ Lemma ctx_wf_insert n x Γ A :
   ctx_wf n Γ →
   type_wf n A →
   ctx_wf n (<[x := A]> Γ).
-Proof. (* TODO *) Admitted.
+Proof.
+  ii. destruct (decide (x = x0)) as [->|ne].
+  - by rewrite (lookup_insert Γ) in H1; simplify_option_eq.
+  - rewrite (lookup_insert_ne Γ) in H1; eauto.
+Qed.
 
 Lemma ctx_wf_up n Γ :
   ctx_wf n Γ → ctx_wf (S n) (⤉ Γ).
-Proof. (* TODO *) Admitted.
+Proof.
+  ii. erewrite (lookup_fmap (subst _) Γ) in H0.
+  apply fmap_Some in H0 as (B & HB & ->).
+  apply H in HB. by apply type_wf_up.
+Qed.
 
 #[global]
 Hint Resolve ctx_wf_empty ctx_wf_insert ctx_wf_up : core.
@@ -360,7 +389,11 @@ Lemma has_type_wf n Γ e A :
   ctx_wf n Γ →
   TY n; Γ ⊢ e : A →
   type_wf n A.
-Proof. (* TODO *) Admitted.
+Proof.
+  induction 2; eauto; intuition; try solve_by_invert.
+  apply type_wf_single_subst; eauto.
+  eapply type_wf_mono; solve_by_invert.
+Qed.
 
 Lemma typed_weakening n m Γ Δ e A :
   TY n; Γ ⊢ e : A →
