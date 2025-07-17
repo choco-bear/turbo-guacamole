@@ -400,14 +400,24 @@ Lemma typed_weakening n m Γ Δ e A :
   Γ ⊆ Δ →
   n ≤ m →
   TY m; Γ ⊢ e : A.
-Proof. (* TODO *) Admitted.
-
+Proof.
+  induction 1 in m, Δ |-*; ii; eauto; econstructor;
+  try solve [ by eapply type_wf_mono
+            | eapply type_wf_mono; eauto with lia
+            | eapply IHhas_type; eauto with lia
+            | eapply IHhas_type1; eauto with lia
+            | eapply IHhas_type2; eauto with lia ].
+  by eapply type_wf_mono.
+Qed.
 
 Lemma type_subst_eq n A δ τ :
   type_wf n A →
   (∀ m, m < n → δ m = τ m) →
   A.[δ] = A.[τ].
-Proof. (* TODO *) Admitted.
+Proof.
+  induction 1 in δ, τ |-*; ii; eauto; asimpl; f_equal; eauto;
+  apply IHtype_wf; ii; destruct m as [|m]; asimpl; f_equal; apply H0; lia.
+Qed.
 
 Lemma type_wf_closed A δ :
   type_wf 0 A →
