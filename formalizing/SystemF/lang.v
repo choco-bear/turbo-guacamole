@@ -285,7 +285,7 @@ Inductive base_step : expr → expr → Prop :=
       is_val e →
       base_step (Case (InjR e) e1 e2) (App e2 e)
   .
-
+#[export] Hint Constructors base_step : core.
 
 (** We define evaluation contexts *)
 Inductive ectx :=
@@ -356,6 +356,7 @@ Inductive contextual_step (e1 : expr) (e2 : expr) : Prop :=
     e2 = fill K e2' →
     base_step e1' e2' →
     contextual_step e1 e2.
+#[export] Hint Constructors contextual_step : core.
 Definition reducible (e : expr) := ∃ e', contextual_step e e'.
 
 Definition empty_ectx := HoleCtx.
