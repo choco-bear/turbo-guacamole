@@ -85,6 +85,15 @@ Proof.
     destruct (decide (x = y)); [subst; left|right; apply H]; set_solver.
 Qed.
 
+Lemma is_closed_nil_iff_FV_empty e :
+  FV e = ∅ ↔ is_closed [] e.
+Proof.
+  split.
+  - change [] with (elements (∅ : gset string)).
+    i; apply free_variables_is_closed. set_solver.
+  - i. apply is_closed_free_variables' in H. set_solver.
+Qed.
+
 (** Free variables and substitution *)
 Lemma free_variables_no_subst x es e :
   x ∉ FV e → FV (subst x es e) = FV e.
