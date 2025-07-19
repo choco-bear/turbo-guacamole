@@ -33,3 +33,4 @@ formalizing/SystemF/tactics.v
 formalizing/SystemF/free_variables.v
 formalizing/SystemF/types.v
 formalizing/SystemF/big_step.v
+formalizing/SystemF/ctx_typing.v
