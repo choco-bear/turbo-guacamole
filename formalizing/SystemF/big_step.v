@@ -83,8 +83,8 @@ Notation "e ↓ v" := (big_step e v) (at level 90, no associativity).
 
 (** ** Properties of Big Step Semantics *)
 Lemma big_step_deterministic e v1 v2 :
-  big_step e v1 ->
-  big_step e v2 ->
+  e ↓ v1 ->
+  e ↓ v2 ->
   v1 = v2.
 Proof.
   induction 1 in v2 |-*; inv 1;
@@ -103,7 +103,7 @@ Proof.
 Qed.
 
 Lemma big_step_contextual e v :
-  big_step e v → rtc contextual_step e v.
+    e ↓ v → e ↝* v.
 Proof.
   induction 1; simpl in *.
   Local Tactic Notation "exploit" uconstr(ctx) :=
@@ -163,11 +163,11 @@ Qed.
 
 Lemma big_step_of_val e v :
   e = v →
-  big_step e v.
+  e ↓ v.
 Proof. intros ->. induction v; simpl; eauto. Qed.
 
 Lemma big_step_val v v' :
-  big_step v v' → v = v'.
+  v ↓ v' → v = v'.
 Proof.
   enough (∀ e, big_step e v' → e = v → v = v') by naive_solver. intros e bs.
   induction bs in v |-*; intros Heq; destruct v; inversion Heq; subst; naive_solver.
@@ -175,7 +175,7 @@ Qed.
 
 Lemma big_step_perserves_closed e v :
   is_closed [] e →
-  big_step e v →
+  e ↓ v →
   is_closed [] v.
 Proof.
   intro Hcl. induction 1; try done; simpl in *.
@@ -186,7 +186,7 @@ Proof.
 Qed.
 Corollary big_step_perserves_closed' e v :
   FV e = ∅ →
-  big_step e v →
+  e ↓ v →
   FV v = ∅.
 Proof.
   rewrite !is_closed_nil_iff_FV_empty.

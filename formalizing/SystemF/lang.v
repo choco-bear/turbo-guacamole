@@ -355,7 +355,7 @@ Inductive contextual_step (e1 : expr) (e2 : expr) : Prop :=
   Ectx_step K e1' e2' :
     e1 = fill K e1' →
     e2 = fill K e2' →
-    base_step e1' e2' →
+    e1' ↝b e2' →
     contextual_step e1 e2.
 Notation "e1 ↝ e2" := (contextual_step e1%E e2%E) (at level 90, no associativity).
 Notation "e1 '↝*' e2" := (rtc contextual_step e1%E e2%E) (at level 90, no associativity).
@@ -374,18 +374,18 @@ Proof. induction K1; simpl; congruence. Qed.
 
 (** Basic properties about the contextual step. *)
 Lemma base_contextual_step e1 e2 :
-  base_step e1 e2 → contextual_step e1 e2.
+  e1 ↝b e2 → e1 ↝ e2.
 Proof. apply Ectx_step with empty_ectx; by rewrite ?fill_empty. Qed.
 
 Lemma fill_contextual_step K e1 e2 :
-  contextual_step e1 e2 → contextual_step (fill K e1) (fill K e2).
+  e1 ↝ e2 → (fill K e1) ↝ (fill K e2).
 Proof.
   destruct 1 as [K' e1' e2' -> ->].
   rewrite !fill_comp. by econstructor.
 Qed.
 
 Lemma fill_rtc_contextual_step K e1 e2 :
-  rtc contextual_step e1 e2 → rtc contextual_step (fill K e1) (fill K e2).
+  e1 ↝* e2 → (fill K e1) ↝* (fill K e2).
 Proof.
   induction 1; try naive_solver.
   etrans; eauto using rtc_once, fill_contextual_step.
