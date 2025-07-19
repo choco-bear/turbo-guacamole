@@ -285,6 +285,7 @@ Inductive base_step : expr → expr → Prop :=
       is_val e →
       base_step (Case (InjR e) e1 e2) (App e2 e)
   .
+Notation "e1 '↝b' e2" := (base_step e1%E e2%E) (at level 70, no associativity).
 #[export] Hint Constructors base_step : core.
 
 (** We define evaluation contexts *)
@@ -356,6 +357,8 @@ Inductive contextual_step (e1 : expr) (e2 : expr) : Prop :=
     e2 = fill K e2' →
     base_step e1' e2' →
     contextual_step e1 e2.
+Notation "e1 ↝ e2" := (contextual_step e1%E e2%E) (at level 90, no associativity).
+Notation "e1 '↝*' e2" := (rtc contextual_step e1%E e2%E) (at level 90, no associativity).
 #[export] Hint Constructors contextual_step : core.
 Definition reducible (e : expr) := ∃ e', contextual_step e e'.
 
