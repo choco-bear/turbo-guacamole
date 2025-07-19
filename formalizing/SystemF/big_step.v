@@ -78,7 +78,7 @@ Inductive big_step : expr -> val -> Prop :=
     big_step (subst' x v e') v' →
     big_step (Case e e1 e2) v'
 .
-
+Notation "e ↓ v" := (big_step e v) (at level 90, no associativity).
 #[export] Hint Constructors big_step : core.
 
 (** ** Properties of Big Step Semantics *)
