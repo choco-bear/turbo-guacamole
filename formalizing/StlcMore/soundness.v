@@ -1,4 +1,4 @@
-From Formalizing.StlcMore Require Import steps type.
+From Formalizing.StlcMore Require Import steps syn_type.
 From Intro2TT Require Import Tactics.
 
 (** ** Soundness of the STLC language. *)
