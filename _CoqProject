@@ -22,6 +22,7 @@ formalizing/StlcMore/ctx_step.v
 formalizing/StlcMore/big_step.v
 formalizing/StlcMore/steps.v
 formalizing/StlcMore/syn_type.v
+formalizing/StlcMore/ctx_type.v
 formalizing/StlcMore/soundness.v
 formalizing/StlcMore/tactics.v
 formalizing/StlcMore/free_variables.v
