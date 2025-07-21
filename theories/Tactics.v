@@ -21,14 +21,16 @@ Ltac solve_by_invert := solve_by_inverts 1.
 
 (** Solve by injects *)
 Inductive Tmarker := Omarker.
+Ltac mk_marker :=
+  let marker := fresh "marker" in
+  pose proof Omarker as marker; revert marker.
 Ltac intros_until_marker :=
   intro; match goal with
          | H : Tmarker |- _ => clear H 
          | H : _ |- _ => intros_until_marker 
          end.
 Ltac subst_inject H :=
-  pose proof Omarker as marker; revert marker;
-  injection H; intros_until_marker; subst; clear H.
+  mk_marker; injection H; intros_until_marker; subst; clear H.
 Ltac solve_by_injects n :=
   match goal with | H : ?T |- _ =>
     match type of T with Prop =>
