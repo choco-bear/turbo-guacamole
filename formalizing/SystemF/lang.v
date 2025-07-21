@@ -590,8 +590,9 @@ Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
   reducible_case : core.
 
 (** ** Closed expressions *)
-(** An expression is closed if it does not contain any free variables. *)
-
+(** An expression is closed if it does not contain any free variables.
+  * We define a predicate [is_closed X e] that checks if the expression [e]
+  * is closed with respect to the list of variables [X]. *)
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
    match e with
   | Var x => bool_decide (x ∈ X)
@@ -611,7 +612,7 @@ Proof. apply _. Defined.
 #[export] Instance is_closed_dec X e : Decision (is_closed X e).
 Proof. apply _. Defined.
 
-(** closed expressions *)
+(** Properties of [is_closed] *)
 Lemma is_closed_weaken X Y e : is_closed X e → X ⊆ Y → is_closed Y e.
 Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
 
