@@ -115,7 +115,7 @@ Inductive bin_op_typed : bin_op → ty → ty → ty → Prop :=
   | or_op_typed :
       bin_op_typed OrOp Bool Bool Bool
   | sub_op_typed :
-      bin_op_typed SubOp String String String
+      bin_op_typed SubOp Bool Bool Bool
   | concat_op_typed :
       bin_op_typed ConcatOp String String String
   | prefix_op_typed :
@@ -627,3 +627,80 @@ Lemma canonical_value_sum n Γ e A B :
   is_val e →
   ∃ e', (e = InjL e' ∨ e = InjR e') ∧ is_val e'.
 Proof. inversion 1; naive_solver. Qed.
+
+
+
+(** Tactics *)
+
+Ltac simplify_val_typing :=
+  repeat match goal with
+  | H : ∃ _, _ |- _ => destruct H
+  | H : _ ∧ _ |- _ => destruct H
+  | H : _ ∨ _ |- _ => destruct H
+  | H : of_val ?v = ?e |- _ =>
+      destruct v; simpl in H; try congruence; subst_inject H
+  | H : TY _; _ ⊢ of_val _ : Bool |- _ =>
+      apply canonical_value_bool in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : Int |- _ =>
+      apply canonical_value_int in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : String |- _ =>
+      apply canonical_value_string in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : Unit |- _ =>
+      apply canonical_value_unit in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : (_ → _) |- _ =>
+      apply canonical_value_arr in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : (_ × _) |- _ =>
+      apply canonical_value_prod in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : (_ + _) |- _ =>
+      apply canonical_value_sum in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : (∀: _) |- _ =>
+      apply canonical_value_forall in H; [|solve_val]
+  | H : TY _; _ ⊢ of_val _ : (∃: _) |- _ =>
+      apply canonical_value_exists in H; [|solve_val]
+  | H : bin_op_typed _ _ _ _ |- _ =>
+      inv H
+  | H : un_op_typed _ _ _ |- _ =>
+      inv H
+  end.
+
+
+Ltac solve_reducible :=
+  by repeat match goal with
+  | H : reducible ?e2 |- reducible (App ?e1 ?e2) =>
+      by eapply fill_reducible with (K := AppRCtx e1 HoleCtx)
+  | H : reducible ?e |- reducible (App ?e _) =>
+      by eapply fill_reducible with (K := AppLCtx HoleCtx _)
+  | H : reducible ?e |- reducible (UnOp _ ?e) =>
+      by eapply fill_reducible with (K := UnOpCtx _ HoleCtx)
+  | H : reducible ?e2 |- reducible (BinOp _ ?e1 ?e2) =>
+      by eapply fill_reducible with (K := BinOpRCtx _ e1 HoleCtx)
+  | H : reducible ?e |- reducible (BinOp _ ?e _) =>
+      by eapply fill_reducible with (K := BinOpLCtx _ HoleCtx _)
+  | H : reducible ?e |- reducible (If ?e _ _) =>
+      by eapply fill_reducible with (K := IfCtx HoleCtx _ _)
+  | H : reducible ?e |- reducible (TApp ?e) =>
+      by eapply fill_reducible with (K := TAppCtx HoleCtx)
+  | H : reducible ?e |- reducible (Pack ?e) =>
+      by eapply fill_reducible with (K := PackCtx HoleCtx)
+  | H : reducible ?e |- reducible (Unpack _ ?e _) =>
+      by eapply fill_reducible with (K := UnpackCtx _ HoleCtx _)
+  | H : reducible ?e2 |- reducible (Pair ?e1 ?e2) =>
+      by eapply fill_reducible with (K := PairRCtx e1 HoleCtx)
+  | H : reducible ?e |- reducible (Pair ?e _) =>
+      by eapply fill_reducible with (K := PairLCtx HoleCtx _)
+  | H : reducible ?e |- reducible (Fst ?e) =>
+      by eapply fill_reducible with (K := FstCtx HoleCtx)
+  | H : reducible ?e |- reducible (Snd ?e) =>
+      by eapply fill_reducible with (K := SndCtx HoleCtx)
+  | H : reducible ?e |- reducible (InjL ?e) =>
+      by eapply fill_reducible with (K := InjLCtx HoleCtx)
+  | H : reducible ?e |- reducible (InjR ?e) =>
+      by eapply fill_reducible with (K := InjRCtx HoleCtx)
+  | H : reducible ?e |- reducible (Case ?e _ _) =>
+      by eapply fill_reducible with (K := CaseCtx HoleCtx _ _)
+  | H : bin_op_typed _ _ _ _ |- _ =>
+      inv H
+  | H : un_op_typed _ _ _ |- _ =>
+      inv H
+  | H : TY _; _ ⊢ of_val _ : _ |- _ => simplify_val_typing
+  end.
