@@ -287,6 +287,7 @@ Inductive base_step : expr → expr → Prop :=
   .
 Notation "e1 '↝b' e2" := (base_step e1%E e2%E) (at level 70, no associativity).
 #[export] Hint Constructors base_step : core.
+Definition base_reducible e := ∃ e', e ↝b e'.
 
 (** We define evaluation contexts *)
 Inductive ectx :=
@@ -360,7 +361,7 @@ Inductive contextual_step (e1 : expr) (e2 : expr) : Prop :=
 Notation "e1 ↝ e2" := (contextual_step e1%E e2%E) (at level 90, no associativity).
 Notation "e1 '↝*' e2" := (rtc contextual_step e1%E e2%E) (at level 90, no associativity).
 #[export] Hint Constructors contextual_step : core.
-Definition reducible (e : expr) := ∃ e', contextual_step e e'.
+Definition reducible (e : expr) := ∃ e', e ↝ e'.
 
 Definition empty_ectx := HoleCtx.
 
@@ -389,6 +390,18 @@ Lemma fill_rtc_contextual_step K e1 e2 :
 Proof.
   induction 1; try naive_solver.
   etrans; eauto using rtc_once, fill_contextual_step.
+Qed.
+
+(** Basic properties about the reducible. *)
+Lemma base_reducible_reducible e :
+  base_reducible e → reducible e.
+Proof. by intros [e' red]; exists e'; apply base_contextual_step. Qed.
+
+Lemma fill_reducible K e :
+  reducible e → reducible (fill K e).
+Proof.
+  intros [e' H]; eexists.
+  by apply fill_contextual_step.
 Qed.
 
 
