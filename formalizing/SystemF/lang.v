@@ -2,6 +2,7 @@ Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From stdpp Require Export binders strings.
 From stdpp Require Import option.
 From Intro2TT Require Export lib.maps.
+From Intro2TT Require Import Tactics.
 
 (** ** Language of System F *)
 (** This file defines the language of System F *)
@@ -392,7 +393,99 @@ Proof.
   etrans; eauto using rtc_once, fill_contextual_step.
 Qed.
 
-(** Basic properties about the reducible. *)
+(** We derive lemmas lifting contextual steps akin to the structural semantics. *)
+Lemma contextual_step_app_l e1 e1' e2 :
+  is_val e2 →
+  e1 ↝ e1' →
+  App e1 e2 ↝ App e1' e2.
+Proof. by i; simplify_val; eapply fill_contextual_step with (K := AppLCtx HoleCtx _). Qed.
+
+Lemma contextual_step_app_r e1 e2 e2' :
+  e2 ↝ e2' →
+  App e1 e2 ↝ App e1 e2'.
+Proof. by i; eapply fill_contextual_step with (K := AppRCtx _ HoleCtx). Qed.
+
+Lemma contextual_step_un_op op e e' :
+  e ↝ e' →
+  UnOp op e ↝ UnOp op e'.
+Proof. by i; eapply fill_contextual_step with (K := UnOpCtx _ HoleCtx). Qed.
+
+Lemma contextual_step_bin_op_l op e1 e1' e2 :
+  is_val e2 →
+  e1 ↝ e1' →
+  BinOp op e1 e2 ↝ BinOp op e1' e2.
+Proof. by i; simplify_val; eapply fill_contextual_step with (K := BinOpLCtx _ HoleCtx _). Qed.
+
+Lemma contextual_step_bin_op_r op e1 e2 e2' :
+  e2 ↝ e2' →
+  BinOp op e1 e2 ↝ BinOp op e1 e2'.
+Proof. by i; eapply fill_contextual_step with (K := BinOpRCtx _ _ HoleCtx). Qed.
+
+Lemma contextual_step_if e e' e1 e2 :
+  e ↝ e' →
+  If e e1 e2 ↝ If e' e1 e2.
+Proof. by i; eapply fill_contextual_step with (K := IfCtx HoleCtx _ _). Qed.
+
+Lemma contextual_step_tapp e e' :
+  e ↝ e' →
+  TApp e ↝ TApp e'.
+Proof. by i; eapply fill_contextual_step with (K := TAppCtx HoleCtx). Qed.
+
+Lemma contextual_step_pack e e' :
+  e ↝ e' →
+  Pack e ↝ Pack e'.
+Proof. by i; eapply fill_contextual_step with (K := PackCtx HoleCtx). Qed.
+
+Lemma contextual_step_unpack x e1 e1' e2 :
+  e1 ↝ e1' →
+  Unpack x e1 e2 ↝ Unpack x e1' e2.
+Proof. by i; eapply fill_contextual_step with (K := UnpackCtx _ HoleCtx _). Qed.
+
+Lemma contextual_step_pair_l e1 e1' e2 :
+  is_val e2 →
+  e1 ↝ e1' →
+  Pair e1 e2 ↝ Pair e1' e2.
+Proof. by i; simplify_val; eapply fill_contextual_step with (K := PairLCtx HoleCtx _). Qed.
+
+Lemma contextual_step_pair_r e1 e2 e2' :
+  e2 ↝ e2' →
+  Pair e1 e2 ↝ Pair e1 e2'.
+Proof. by i; eapply fill_contextual_step with (K := PairRCtx _ HoleCtx). Qed.
+
+Lemma contextual_step_fst e e' :
+  e ↝ e' →
+  Fst e ↝ Fst e'.
+Proof. by i; eapply fill_contextual_step with (K := FstCtx HoleCtx). Qed.
+
+Lemma contextual_step_snd e e' :
+  e ↝ e' →
+  Snd e ↝ Snd e'.
+Proof. by i; eapply fill_contextual_step with (K := SndCtx HoleCtx). Qed.
+
+Lemma contextual_step_injl e e' :
+  e ↝ e' →
+  InjL e ↝ InjL e'.
+Proof. by i; eapply fill_contextual_step with (K := InjLCtx HoleCtx). Qed.
+
+Lemma contextual_step_injr e e' :
+  e ↝ e' →
+  InjR e ↝ InjR e'.
+Proof. by i; eapply fill_contextual_step with (K := InjRCtx HoleCtx). Qed.
+
+Lemma contextual_step_case e e' e1 e2 :
+  e ↝ e' →
+  Case e e1 e2 ↝ Case e' e1 e2.
+Proof. by i; eapply fill_contextual_step with (K := CaseCtx HoleCtx _ _). Qed.
+
+#[export] Hint Resolve
+  contextual_step_app_l contextual_step_app_r contextual_step_un_op
+  contextual_step_bin_op_l contextual_step_bin_op_r contextual_step_if
+  contextual_step_tapp contextual_step_pack contextual_step_unpack
+  contextual_step_pair_l contextual_step_pair_r contextual_step_fst
+  contextual_step_snd contextual_step_injl contextual_step_injr
+  contextual_step_case : core.
+
+(** ** Properties of the [reducible] *)
 Lemma base_reducible_reducible e :
   base_reducible e → reducible e.
 Proof. by intros [e' red]; exists e'; apply base_contextual_step. Qed.
@@ -404,7 +497,100 @@ Proof.
   by apply fill_contextual_step.
 Qed.
 
+(** We derive lemmas lifting reducibility akin to the structural semantics. *)
+Lemma reducible_app_l e1 e2 :
+  is_val e2 →
+  reducible e1 →
+  reducible (App e1 e2).
+Proof. unfold reducible; intros Hv [e1' Hred]; eauto. Qed.
 
+Lemma reducible_app_r e1 e2 :
+  reducible e2 →
+  reducible (App e1 e2).
+Proof. unfold reducible; intros [e2' Hred]; eauto. Qed.
+
+Lemma reducible_un_op op e :
+  reducible e →
+  reducible (UnOp op e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_bin_op_l op e1 e2 :
+  is_val e2 →
+  reducible e1 →
+  reducible (BinOp op e1 e2).
+Proof. unfold reducible; intros Hv [e1' Hred]; eauto. Qed.
+
+Lemma reducible_bin_op_r op e1 e2 :
+  reducible e2 →
+  reducible (BinOp op e1 e2).
+Proof. unfold reducible; intros [e2' Hred]; eauto. Qed.
+
+Lemma reducible_if e e1 e2 :
+  reducible e →
+  reducible (If e e1 e2).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_tapp e :
+  reducible e →
+  reducible (TApp e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_pack e :
+  reducible e →
+  reducible (Pack e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_unpack x e1 e2 :
+  reducible e1 →
+  reducible (Unpack x e1 e2).
+Proof. unfold reducible; intros [e1' Hred]; eauto. Qed.
+
+Lemma reducible_pair_l e1 e2 :
+  is_val e2 →
+  reducible e1 →
+  reducible (Pair e1 e2).
+Proof. unfold reducible; intros Hv [e1' Hred]; eauto. Qed.
+
+Lemma reducible_pair_r e1 e2 :
+  reducible e2 →
+  reducible (Pair e1 e2).
+Proof. unfold reducible; intros [e2' Hred]; eauto. Qed.
+
+Lemma reducible_fst e :
+  reducible e →
+  reducible (Fst e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_snd e :
+  reducible e →
+  reducible (Snd e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_injl e :
+  reducible e →
+  reducible (InjL e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_injr e :
+  reducible e →
+  reducible (InjR e).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+Lemma reducible_case e e1 e2 :
+  reducible e →
+  reducible (Case e e1 e2).
+Proof. unfold reducible; intros [e' Hred]; eauto. Qed.
+
+#[export] Hint Resolve
+  reducible_app_l reducible_app_r reducible_un_op
+  reducible_bin_op_l reducible_bin_op_r reducible_if
+  reducible_tapp reducible_pack reducible_unpack
+  reducible_pair_l reducible_pair_r reducible_fst
+  reducible_snd reducible_injl reducible_injr
+  reducible_case : core.
+
+(** ** Closed expressions *)
+(** An expression is closed if it does not contain any free variables. *)
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
    match e with

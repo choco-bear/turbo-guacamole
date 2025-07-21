@@ -21,7 +21,7 @@ Proof.
   | |- _ ∨ True => by right
   | |- _ ∨ False => left
   | |- _ ∨ _ => first [ right; solve_val | left]
-  end; subst; first done; try solve_reducible; simplify_val_typing.
+  end; subst; first done; eauto; simplify_val_typing.
   all: try match goal with x : bool |- _ => destruct x end;
        apply base_reducible_reducible; unfold base_reducible; simpl; eauto.
 Qed.

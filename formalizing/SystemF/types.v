@@ -630,8 +630,10 @@ Proof. inversion 1; naive_solver. Qed.
 
 
 
-(** Tactics *)
-
+(** Tactic *)
+(** [simplify_val_typing] is a tactic that simplifies the goal by destructing
+  * existential quantifiers, conjunctions, and disjunctions, and applying the
+  * canonical value lemmas. It is used to simplify goals in the type system. *)
 Ltac simplify_val_typing :=
   repeat match goal with
   | H : ∃ _, _ |- _ => destruct H
@@ -661,46 +663,4 @@ Ltac simplify_val_typing :=
       inv H
   | H : un_op_typed _ _ _ |- _ =>
       inv H
-  end.
-
-
-Ltac solve_reducible :=
-  by repeat match goal with
-  | H : reducible ?e2 |- reducible (App ?e1 ?e2) =>
-      by eapply fill_reducible with (K := AppRCtx e1 HoleCtx)
-  | H : reducible ?e |- reducible (App ?e _) =>
-      by eapply fill_reducible with (K := AppLCtx HoleCtx _)
-  | H : reducible ?e |- reducible (UnOp _ ?e) =>
-      by eapply fill_reducible with (K := UnOpCtx _ HoleCtx)
-  | H : reducible ?e2 |- reducible (BinOp _ ?e1 ?e2) =>
-      by eapply fill_reducible with (K := BinOpRCtx _ e1 HoleCtx)
-  | H : reducible ?e |- reducible (BinOp _ ?e _) =>
-      by eapply fill_reducible with (K := BinOpLCtx _ HoleCtx _)
-  | H : reducible ?e |- reducible (If ?e _ _) =>
-      by eapply fill_reducible with (K := IfCtx HoleCtx _ _)
-  | H : reducible ?e |- reducible (TApp ?e) =>
-      by eapply fill_reducible with (K := TAppCtx HoleCtx)
-  | H : reducible ?e |- reducible (Pack ?e) =>
-      by eapply fill_reducible with (K := PackCtx HoleCtx)
-  | H : reducible ?e |- reducible (Unpack _ ?e _) =>
-      by eapply fill_reducible with (K := UnpackCtx _ HoleCtx _)
-  | H : reducible ?e2 |- reducible (Pair ?e1 ?e2) =>
-      by eapply fill_reducible with (K := PairRCtx e1 HoleCtx)
-  | H : reducible ?e |- reducible (Pair ?e _) =>
-      by eapply fill_reducible with (K := PairLCtx HoleCtx _)
-  | H : reducible ?e |- reducible (Fst ?e) =>
-      by eapply fill_reducible with (K := FstCtx HoleCtx)
-  | H : reducible ?e |- reducible (Snd ?e) =>
-      by eapply fill_reducible with (K := SndCtx HoleCtx)
-  | H : reducible ?e |- reducible (InjL ?e) =>
-      by eapply fill_reducible with (K := InjLCtx HoleCtx)
-  | H : reducible ?e |- reducible (InjR ?e) =>
-      by eapply fill_reducible with (K := InjRCtx HoleCtx)
-  | H : reducible ?e |- reducible (Case ?e _ _) =>
-      by eapply fill_reducible with (K := CaseCtx HoleCtx _ _)
-  | H : bin_op_typed _ _ _ _ |- _ =>
-      inv H
-  | H : un_op_typed _ _ _ |- _ =>
-      inv H
-  | H : TY _; _ ⊢ of_val _ : _ |- _ => simplify_val_typing
   end.
