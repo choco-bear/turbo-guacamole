@@ -42,6 +42,32 @@ Ltac solve_by_injects n :=
       end ] end end.
 Ltac solve_by_inject := solve_by_injects 1.
 
+Ltac subst_injects :=
+  match goal with
+  | H : ?p _ = ?p _ |- _ =>
+    first [ subst_inject H; subst_injects
+          | let H' := fresh "H" in
+            mk_marker; assert (H' : Inj (=) (=) p); [by apply _|];
+            apply H' in H; clear H'; intros_until_marker; subst; clear H;
+            subst_injects
+          | mk_marker; revert H; subst_injects; intros_until_marker ]
+  | H : _ = _ |- _ =>
+    first [ subst_inject H; subst_injects 
+          | mk_marker; revert H; subst_injects; intros_until_marker ]
+  | _ => idtac
+  end.
+
+Ltac solve_by_destruct x :=
+  by destruct x; simpl in *; try congruence; try naive_solver; eauto.
+
+Ltac revert_until_marker :=
+  match goal with
+  | |- Tmarker -> _ =>
+    let marker := fresh "marker" in
+    intro marker; clear marker
+  | H : _ |- _ => revert H; revert_until_marker
+  end.
+
 (** bdestruct *)
 Section BDestruct.
   Definition geb (n m : nat) := m <=? n.
