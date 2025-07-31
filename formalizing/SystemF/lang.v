@@ -101,7 +101,7 @@ Proof. by induction v; simplify_option_eq. Qed.
 Lemma of_to_val e v : to_val e = Some v → of_val v = e.
 Proof. revert v; induction e; intros; simplify_option_eq; auto with f_equal. Qed.
 
-#[export] Instance of_val_inj : Inj (=) (=) of_val.
+Global Instance of_val_inj : Inj (=) (=) of_val.
 Proof. by intros ?? H; apply (inj Some); rewrite <-!to_of_val, H. Qed.
 
 
@@ -135,7 +135,13 @@ Ltac simplify_val :=
       let Hv := fresh "H" v in
       destruct (proj1 (is_val_spec e) H) as [v Hv]; clear H
   | H: to_val ?e = Some ?v |- _ =>
-      assert (e = of_val v) as -> by (apply of_to_val in H; auto); clear H
+      first [
+        is_var e;
+        assert (e = of_val v) as -> by (apply of_to_val in H; auto); clear H
+      | let eqv := fresh "eq" v in
+        assert (e = of_val v) as eqv by (apply of_to_val in H; auto); clear H;
+        rewrite eqv in *
+      ]
   | |- context[to_val (of_val ?v)] =>
       do !rewrite to_of_val
   end.
@@ -290,6 +296,13 @@ Notation "e1 '↝b' e2" := (base_step e1%E e2%E) (at level 70, no associativity)
 #[export] Hint Constructors base_step : core.
 Definition base_reducible e := ∃ e', e ↝b e'.
 
+Lemma base_step_det e e' e'' :
+  e ↝b e' → e ↝b e'' → e' = e''.
+Proof.
+  intros H1 H2; revert e'' H2; induction H1;
+  intros e'' H2; inversion H2; subst; auto; naive_solver.
+Qed.
+
 (** We define evaluation contexts *)
 Inductive ectx :=
   | HoleCtx
@@ -373,6 +386,12 @@ Proof. done. Qed.
 Lemma fill_comp (K1 K2 : ectx) e : fill K1 (fill K2 e) = fill (comp_ectx K1 K2) e.
 Proof. induction K1; simpl; congruence. Qed.
 
+Lemma is_val_fill K e :
+  is_val (fill K e) →
+  is_val e.
+Proof.
+  induction K; simpl in *; intuition.
+Qed.
 
 (** Basic properties about the contextual step. *)
 Lemma base_contextual_step e1 e2 :
@@ -477,13 +496,101 @@ Lemma contextual_step_case e e' e1 e2 :
   Case e e1 e2 ↝ Case e' e1 e2.
 Proof. by i; eapply fill_contextual_step with (K := CaseCtx HoleCtx _ _). Qed.
 
+Lemma lit_not_step l:
+  ∀ e, ¬ (Lit l ↝ e).
+Proof.
+  intros e [K e'' e' eq -> Hb]; simpl in *; rename e'' into e.
+  assert (e = Lit l) as -> by (induction K; simpl in *; congruence).
+  solve_by_invert.
+Qed.
+
+Lemma lam_not_step x e:
+  ∀ e', ¬ (Lam x e ↝ e').
+Proof.
+  intros e' [K e''' e'' eq -> Hb]; simpl in *. rename e''' into e'.
+  assert (e' = Lam x e) as -> by (induction K; simpl in *; congruence).
+  solve_by_invert.
+Qed.
+
+Lemma tlam_not_step e:
+  ∀ e', ¬ (TLam e ↝ e').
+Proof.
+  intros e' [K e''' e'' eq -> Hb]; simpl in *; rename e''' into e'.
+  assert (e' = TLam e) as -> by (induction K; simpl in *; congruence).
+  solve_by_invert.
+Qed.
+
+Lemma pack_not_step e:
+  (∀ e', ¬ (e ↝ e')) →
+  ∀ e', ¬ (Pack e ↝ e').
+Proof.
+  intros H e' [K e''' e'' eq -> Hb]; simpl in *; rename e''' into e'.
+  induction K; simpl in *; try congruence.
+  - subst. solve_by_invert.
+  - subst_inject eq. eapply H; eauto.
+Qed.
+
+Lemma pair_not_step e1 e2:
+  (∀ e', ¬ (e1 ↝ e')) →
+  (∀ e', ¬ (e2 ↝ e')) →
+  ∀ e', ¬ (Pair e1 e2 ↝ e').
+Proof.
+  intros H1 H2 e' [K e''' e'' eq -> Hb]; simpl in *; rename e''' into e'.
+  induction K; simpl in *; try congruence.
+  - subst. solve_by_invert.
+  - subst_inject eq. eapply H1; eauto.
+  - subst_inject eq. eapply H2; eauto.
+Qed.
+
+Lemma injl_not_step e:
+  (∀ e', ¬ (e ↝ e')) →
+  ∀ e', ¬ (InjL e ↝ e').
+Proof.
+  intros H e' [K e''' e'' eq -> Hb]; simpl in *; rename e''' into e'.
+  induction K; simpl in *; try congruence.
+  - subst. solve_by_invert.
+  - subst_inject eq. eapply H; eauto.
+Qed.
+
+Lemma injr_not_step e:
+  (∀ e', ¬ (e ↝ e')) →
+  ∀ e', ¬ (InjR e ↝ e').
+Proof.
+  intros H e' [K e''' e'' eq -> Hb]; simpl in *; rename e''' into e'.
+  induction K; simpl in *; try congruence.
+  - subst. solve_by_invert.
+  - subst_inject eq. eapply H; eauto.
+Qed.
+
+Lemma val_not_step e:
+  is_val e →
+  ∀ e', ¬ (e ↝ e').
+Proof.
+  intros Hv. simplify_val.
+  induction v; simpl in *; intros e' Hstep.
+  - by eapply lit_not_step.
+  - by eapply lam_not_step.
+  - by eapply tlam_not_step.
+  - by eapply pack_not_step.
+  - by eapply pair_not_step; cycle 1.
+  - by eapply injl_not_step.
+  - by eapply injr_not_step.
+Qed.
+
+Lemma var_not_step x:
+  ∀ e, ¬ (Var x ↝ e).
+Proof.
+  ii. inv H. inv H2; induction K; simpl in *; congruence.
+Qed.
+
 #[export] Hint Resolve
   contextual_step_app_l contextual_step_app_r contextual_step_un_op
   contextual_step_bin_op_l contextual_step_bin_op_r contextual_step_if
   contextual_step_tapp contextual_step_pack contextual_step_unpack
   contextual_step_pair_l contextual_step_pair_r contextual_step_fst
   contextual_step_snd contextual_step_injl contextual_step_injr
-  contextual_step_case : core.
+  contextual_step_case lit_not_step lam_not_step tlam_not_step pack_not_step
+  pair_not_step injl_not_step injr_not_step val_not_step var_not_step : core.
 
 (** ** Properties of the [reducible] *)
 Lemma base_reducible_reducible e :
