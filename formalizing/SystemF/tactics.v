@@ -25,24 +25,3 @@ Ltac simplify_closed :=
   | |- _ ≠ _ => congruence
   | |- Is_true (bool_decide (_ ∈ _)) => apply bool_decide_pack
   end; try fast_done.
-
-
-Ltac simplify_sets :=
-  simpl; intros;
-  repeat match goal with
-  | H : False |- _ => exfalso; assumption
-  | H : _ ∧ _ |- _ => destruct H
-  | H : context[_ ∈ _ ∖ _] |- _ => rewrite elem_of_difference in H
-  | H : context[_ ∈ _ ∪ _] |- _ => rewrite elem_of_union in H
-  | H : context[_ ∈ _ ∩ _] |- _ => rewrite elem_of_intersection in H
-  | H : ?P ∨ _, H' : ¬ ?P |- _ => destruct H as [H|H]
-  | H : _ ∨ ?P, H' : ¬ ?P |- _ => destruct H as [H|H]
-  | H : ?P, H' : ¬ ?P |- _ => exfalso; apply H', H
-  | H : context[dom (<[_:=_]> ?Γ)] |- _ => rewrite (dom_insert Γ) in H
-  | H : context[dom (_ <$> _)] |- _ => rewrite dom_fmap in H
-  | H : _ ∈ dom _ |- _ => apply elem_of_dom in H
-  | H : _ ∈ {[_]} |- _ => apply elem_of_singleton_1 in H; subst
-  | H : _ ∉ {[_]} |- _ => apply not_elem_of_singleton in H
-  | |- _ ⊆ _ => ii
-  | |- _ ∈ dom _ => apply elem_of_dom
-  end; try fast_done.
