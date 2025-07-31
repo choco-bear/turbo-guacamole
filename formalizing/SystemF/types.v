@@ -664,3 +664,25 @@ Ltac simplify_val_typing :=
   | H : un_op_typed _ _ _ |- _ =>
       inv H
   end.
+
+
+
+(** Contextual Typing *)
+Definition ectx_typing (K: ectx) (A B: ty) :=
+  ∀ e, TY 0; ∅ ⊢ e : A → TY 0; ∅ ⊢ (fill K e) : B.
+
+Lemma fill_typing_decompose K e A:
+  TY 0; ∅ ⊢ fill K e : A →
+  ∃ B, TY 0; ∅ ⊢ e : B ∧ ectx_typing K B A.
+Proof.
+  unfold ectx_typing; induction K in A |-*; simpl; inversion 1; subst; eauto.
+  all: edestruct IHK as (? & ? & ?); eauto.
+Qed.
+
+Lemma fill_typing_compose K e A B:
+  TY 0; ∅ ⊢ e : B →
+  ectx_typing K B A →
+  TY 0; ∅ ⊢ fill K e : A.
+Proof.
+  intros H1 H2; by eapply H2.
+Qed.
