@@ -44,3 +44,14 @@ Proof.
   eapply fill_typing_compose; last done.
   by eapply typed_preservation_base_step.
 Qed.
+
+
+(** Type Safety *)
+Lemma typed_safety e1 e2 A:
+  TY 0; ∅ ⊢ e1 : A →
+  rtc contextual_step e1 e2 →
+  is_val e2 ∨ reducible e2.
+Proof.
+  induction 2; eauto using typed_preservation.
+  eapply typed_progress in H; naive_solver.
+Qed.
