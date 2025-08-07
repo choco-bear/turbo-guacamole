@@ -32,5 +32,5 @@ opam install coq.8.20.1 coq-stdpp.1.11.0 coq-ext-lib.0.13.0 coq-autosubst.1.9
 ## How to Compile
 You can compile this with the command below:
 ```
-make all
+make -j
 ```
